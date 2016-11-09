@@ -88,45 +88,42 @@ int main(int argc, char **argv)
 
     //setup complete, now we're ready to do stuff!
 /* 
- //Receives request from the server to send username:
-  ud
+   //Receives request from the server to send username:
+   char buffy[1001];
+   struct sockaddr_in sinebard;
+   socklen_t sinebardlen = sizeof(sinebard);
+   string username, password;
 
- //Client sends the username:
- 
-     string username;
-     char userResponseBuff[1000];
-     char userResponseBuff2[1000];
-     cout << "Please enter your desired username: " << endl;
-     cin >> username;
-     int len = strlen(username.c_str())+1;
-     udpSend(udpSock, username.c_str(), len, (struct sockaddr*)&udpSock, sizeof(struct sockaddr), "Could not send username");
+   udpRecv(udpSock, buffy, 1000, &sinebard, &sinebardlen, "error receiving server request for username");
 
-    //Receives call from server determining whether the username has been taken or not:
-     udpRecv(udpSock, userResponseBuff, 999, (struct sockaddr*)&client_socket, &addr_len, "Could not receive username confirmation");
-     cout << userResponseBuff << endl;
+   //Client sends the username:
+   cout << buffy << endl;
+   cin >> username;
+   int len = strlen(username.c_str())+1;
+   udpSend(udpSock, username.c_str(), len, &sinbad, sizeof(struct sockaddr), "Could not send username");
 
-    //If ok, client sends the password:
-    cout << "Please enter your desired password << endl;
-    cin >> password;
-    int len2 = strlen(password.c_str())+1;
-    udpSend(udpSock, password.c_str(), len2, (struct sockaddr*)&udpSock, sizeof(struct sockaddr), "Could not send password");
+   //Receives request from the server to send the password:
+   udpRecv(udpSock, buffy, 1000, &sinebard, &sinebardlen, "Could not receive server request for password.");
 
-    //Ack that the user is now in:
-    //"Created a new account" or "username matched"
-    //or username does not match
-    udpRecv(udpSock, userResponseBuff2, 999, (struct sockaddr*)&client_socket, &addr_len, "Could not receive password information");
-    if(strcmp(userResponseBuff2, "Username does not match password given.") != 0) {
-      cout << userResponseBuff2 << endl;
+   //Client sends the password:
+   cout << buffy << endl;
+   cin >> password;
+   int len2 = strlen(password.c_str())+1;
+   udpSend(udpSock, password.c_str(), len2, &sinbad, sizeof(struct sockaddr), "Could not send password");
+
+    //Ack that the user is now logged in:
+    udpRecv(udpSock, buffy, 1000, &sinebard, &sinebardlen, "Did not receive password information");
+    if(strcmp(buffy, "Username does not match password given.") != 0) {
+      cout << buffy << endl;
       exit(1);
     }else{
-      cout << userResponseBuff2 << endl;
+      cout << buffy << endl;
     }
     */
     //Prompt user for operation state:
 
     //THE FOLLOWING IS 100% DEBUGGING
     //debug messages to make sure the connection is working!
-    char buffy[1001];
     tcpStrSend(tcpSock, "This is a TCP test. Also, the Soviets have invaded.\n", "Could not send TCP test");
     tcpRecv(tcpSock, buffy, 1000, "error receiving TCP test message");
     cout << "TCP Received: " << buffy << endl;
