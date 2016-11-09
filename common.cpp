@@ -23,16 +23,18 @@
   data: A buffer of size data_len that will be sent.
   data_len: size in bytes of the data to send.
   errorMsg: What to print out (perror) before exiting if something goes wrong.
-  dest_addr: points to the struct_sockaddr of the destination
+  dest_addr: points to the struct sockaddr_in of the destination
   dest_len: the length of the destination address.
 
   returns number of bytes sent
 */
-int udpSend(int sock, void *data, size_t data_len, struct sockaddr *dest_addr, 
-            socklen_t dest_len, const char *errorMsg)
+int udpSend(int sock, void *data, size_t data_len, 
+            struct sockaddr_in *dest_addr,  socklen_t dest_len, 
+            const char *errorMsg)
 {
     int bytesSent;
-    bytesSent = sendto(sock, (char*) data, data_len, 0, dest_addr, dest_len);
+    bytesSent = sendto(sock, (char*) data, data_len, 0, 
+                       (struct sockaddr*) dest_addr, dest_len);
     if (bytesSent < 0)
     {
         perror(errorMsg);
@@ -46,11 +48,13 @@ int udpSend(int sock, void *data, size_t data_len, struct sockaddr *dest_addr,
   Exactly the same as udpSend except it uses strlen() as data_len.
   returns number of bytes sent
  */
-int udpStrSend(int sock, const char *stringToSend, struct sockaddr *dest_addr, 
-               socklen_t dest_len, const char *errorMsg)
+int udpStrSend(int sock, const char *stringToSend, 
+               struct sockaddr *dest_addr, socklen_t dest_len,
+               const char *errorMsg)
 {
     int bytesSent;
-    bytesSent = sendto(sock, stringToSend, strlen(stringToSend) + 1, 0, dest_addr, dest_len);
+    bytesSent = sendto(sock, stringToSend, strlen(stringToSend) + 1, 0, 
+                       (struct sockaddr*) dest_addr, dest_len);
     if (bytesSent < 0)
     {
         perror(errorMsg);
@@ -76,11 +80,13 @@ int udpStrSend(int sock, const char *stringToSend, struct sockaddr *dest_addr,
 
   returns number of bytes received
 */
-int udpRecv(int sock, void *data, size_t data_len, struct sockaddr *address, 
-        socklen_t *address_len, const char *errorMsg)
+int udpRecv(int sock, void *data, size_t data_len, 
+            struct sockaddr_in *address, socklen_t *address_len,
+            const char *errorMsg)
 {
     int bytesRcvd;
-    bytesRcvd = recvfrom(sock, (char*) data, data_len, 0, address, address_len);
+    bytesRcvd = recvfrom(sock, (char*) data, data_len, 0, 
+                         (struct sockaddr*) address, address_len);
     if (bytesRcvd < 0) 
     {
         perror(errorMsg);
