@@ -2,16 +2,95 @@
 /*
   Authors: Jacob Kassman, Lauren Kuta, Matt Paulson
   netIDs: jkassman, lkuta, mpaulson
-  Computer Networks: Programming Assignment 3
-  common.c
+  Computer Networks: Programming Assignment 4
+  common.cpp
   Defines several functions used frequently throughout both our server and client code.  
  */
 
-#include "common.h"
+#include "common.hpp"
 
-//The following errorCheck sends and receives just make the code cleaner.
+//The following sends and receives just make the code cleaner.
 //They all exit the *entire program* on an error and print out an error message.
 //Also, they're void * so you don't have to cast (char*) anymore.
+
+/*
+  udpSend:
+  Sends data of data_len bytes out of sock.
+  Sends the data to 
+  Prints errorMsg and exits the *entire program* if any error occors.
+
+  sock: The socket to send data over.
+  data: A buffer of size data_len that will be sent.
+  data_len: size in bytes of the data to send.
+  errorMsg: What to print out (perror) before exiting if something goes wrong.
+  dest_addr: points to the struct_sockaddr of the destination
+  dest_len: the length of the destination address.
+
+  returns number of bytes sent
+*/
+int udpSend(int sock, void *data, size_t data_len, struct sockaddr *dest_addr, 
+            socklen_t dest_len, const char *errorMsg)
+{
+    int bytesSent;
+    bytesSent = sendto(sock, (char*) data, data_len, 0, dest_addr, dest_len);
+    if (bytesSent < 0)
+    {
+        perror(errorMsg);
+        close(sock);
+        exit(102);
+    }
+    return bytesSent;
+}
+
+/*
+  Exactly the same as udpSend except it uses strlen() as data_len.
+  returns number of bytes sent
+ */
+int udpStrSend(int sock, char *stringToSend, struct sockaddr *dest_addr, 
+               socklen_t dest_len, const char *errorMsg)
+{
+    int bytesSent;
+    bytesSent = sendto(sock, stringToSend, strlen(stringToSend) + 1, 0, dest_addr, dest_len);
+    if (bytesSent < 0)
+    {
+        perror(errorMsg);
+        close(sock);
+        exit(103);
+    }
+    return bytesSent;
+}
+
+/*
+  udpRecv
+  Receives data_len bytes from sock and stores it in data.
+  Prints errorMsg and exits the *entire program* if any error occors.
+  Stores the address of the sender in address 
+      (and the length of that address in address_len)
+
+  sock: The socket to receive data over.
+  data: A buffer into which at most data_len data will be placed.
+  data_len: size in bytes of the data to receive.
+  errorMsg: What to print out (perror) before exiting if something goes wrong.
+  address: a pointer to the struct sockaddr where the sender's address will be stored
+  address_len: the length of the sender's struct sockaddr.
+
+  returns number of bytes received
+*/
+int udpRecv(int sock, void *data, size_t data_len, struct sockaddr *address, 
+        socklen_t *address_len, const char *errorMsg)
+{
+    int bytesRcvd;
+    bytesRcvd = recvfrom(sock, (char*) data, data_len, 0, address, address_len);
+    if (bytesRcvd < 0) 
+    {
+        perror(errorMsg);
+        close(sock);
+        exit(101);
+    }
+    return bytesRcvd;
+}
+
+
 
 /*
   Receives data_len bytes from sock and stores it in data.
@@ -24,7 +103,7 @@
 
   returns number of bytes received
 */
-int errorCheckRecv(int sock, void *data, size_t data_len, const char *errorMsg) 
+int tcpRecv(int sock, void *data, size_t data_len, const char *errorMsg) 
 {
     int bytesRcvd;
     bytesRcvd = recv(sock, (char*) data, data_len, 0);
@@ -48,7 +127,7 @@ int errorCheckRecv(int sock, void *data, size_t data_len, const char *errorMsg)
 
   returns number of bytes sent
 */
-int errorCheckSend(int sock, void *data, size_t data_len, const char *errorMsg)
+int tcpSend(int sock, void *data, size_t data_len, const char *errorMsg)
 {
     int bytesSent;
     bytesSent = send(sock, (char*) data, data_len, 0);
@@ -64,7 +143,7 @@ int errorCheckSend(int sock, void *data, size_t data_len, const char *errorMsg)
   Exactly the same as errorCheckSend except it uses strlen() as data_len.
   returns number of bytes sent
  */
-int errorCheckStrSend(int sock, char *stringToSend, const char *errorMsg)
+int tcpStrSend(int sock, char *stringToSend, const char *errorMsg)
 {
     int bytesSent;
     bytesSent = send(sock, stringToSend, strlen(stringToSend) + 1, 0);
@@ -212,7 +291,7 @@ void recvFile(int sock, FILE *f, unsigned int fileSize,
 {
     //Reads x number of bytes from server:
     char file[PROG3_BUFF_SIZE];
-    int counter = 0;
+    unsigned int counter = 0;
     int fileRecvd;
 
     while(counter < fileSize){
