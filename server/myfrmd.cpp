@@ -73,6 +73,22 @@ int main(int argc, char * argv[]){
   tcpStrSend(new_s, "Test", "myfrmd");
 
   printf("Received:%s",message);
+
+  //Sends request for the username:
+
+  //Receives username:
+
+  //Checks to see if it is a new user or existing user:
+
+  //Requests password:
+
+  //Receives password:
+
+  //Checks to see if there is a new user or see if the password matches:
+
+  //Sends acknowledgment to the client:
+
+  //Wait for operation from client:
   
   close(s);
 }

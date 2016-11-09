@@ -62,17 +62,12 @@ int main(int argc, char **argv)
     }
 
     //setup complete, now we're ready to do stuff!
+/* 
+ //Receives request from the server to send username:
+  ud
 
-    //THE FOLLOWING IS 100% DEBUGGING
-    //debug messages to make sure the connection is working!
-    char buffy[1001];
-    tcpStrSend(tcpSock, "This is a TCP test. Also, the Soviets have invaded.\n", "Could not send TCP test");
-    tcpRecv(tcpSock, buffy, 1000, "error receiving TCP test message");
-    cout << "TCP Received: " << buffy << endl;
-    close(tcpSock);
+ //Client sends the username:
  
-    //Client sends the username:
-    /* 
      string username;
      char userResponseBuff[1000];
      char userResponseBuff2[1000];
@@ -103,6 +98,14 @@ int main(int argc, char **argv)
     }
     */
     //Prompt user for operation state:
+
+    //THE FOLLOWING IS 100% DEBUGGING
+    //debug messages to make sure the connection is working!
+    char buffy[1001];
+    tcpStrSend(tcpSock, "This is a TCP test. Also, the Soviets have invaded.\n", "Could not send TCP test");
+    tcpRecv(tcpSock, buffy, 1000, "error receiving TCP test message");
+    cout << "TCP Received: " << buffy << endl;
+    close(tcpSock);
 
     socklen_t test = sizeof(struct sockaddr);
 
