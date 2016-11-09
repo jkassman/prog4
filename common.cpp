@@ -46,7 +46,7 @@ int udpSend(int sock, void *data, size_t data_len, struct sockaddr *dest_addr,
   Exactly the same as udpSend except it uses strlen() as data_len.
   returns number of bytes sent
  */
-int udpStrSend(int sock, char *stringToSend, struct sockaddr *dest_addr, 
+int udpStrSend(int sock, const char *stringToSend, struct sockaddr *dest_addr, 
                socklen_t dest_len, const char *errorMsg)
 {
     int bytesSent;
@@ -143,7 +143,7 @@ int tcpSend(int sock, void *data, size_t data_len, const char *errorMsg)
   Exactly the same as errorCheckSend except it uses strlen() as data_len.
   returns number of bytes sent
  */
-int tcpStrSend(int sock, char *stringToSend, const char *errorMsg)
+int tcpStrSend(int sock, const char *stringToSend, const char *errorMsg)
 {
     int bytesSent;
     bytesSent = send(sock, stringToSend, strlen(stringToSend) + 1, 0);
