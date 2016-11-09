@@ -235,7 +235,7 @@ int hashCompare(unsigned char *hash1, unsigned char *hash2) {
 }
 
 /*
-  Sends a file over the socket, one PROG3_BUFF_SIZE chunk at a time.
+  Sends a file over the socket, one PROG4_BUFF_SIZE chunk at a time.
 
   sock: the socket to send the file over
   file: the file you want to send. Note: Does NOT reset file pointer!
@@ -248,7 +248,7 @@ int hashCompare(unsigned char *hash1, unsigned char *hash2) {
 void sendFile(int sock, FILE* file, unsigned int fileSize, 
               const char *programName)
 {
-    char sendFileBuffer[PROG3_BUFF_SIZE];
+    char sendFileBuffer[PROG4_BUFF_SIZE];
     size_t bytesRead = 0;
     size_t bytesThisTime = 0;
     int status;
@@ -256,7 +256,7 @@ void sendFile(int sock, FILE* file, unsigned int fileSize,
     while (bytesRead < fileSize) 
     {
         //Read up to the maximum buffer size from the file
-        bytesThisTime = fread(sendFileBuffer, 1, PROG3_BUFF_SIZE, file);
+        bytesThisTime = fread(sendFileBuffer, 1, PROG4_BUFF_SIZE, file);
         if (bytesThisTime == 0) 
         {
             fprintf(stderr, "%s Error: read file: %s\n", 
@@ -282,7 +282,7 @@ void sendFile(int sock, FILE* file, unsigned int fileSize,
 
 
 /*
-  Receives a file over the socket, one PROG3_BUFF_SIZE chunk at a time.
+  Receives a file over the socket, one PROG4_BUFF_SIZE chunk at a time.
 
   sock: the socket to receive the file over
   file: the opened file you want to write to. Note: Does NOT reset file pointer!
@@ -296,12 +296,12 @@ void recvFile(int sock, FILE *f, unsigned int fileSize,
               const char *programName)
 {
     //Reads x number of bytes from server:
-    char file[PROG3_BUFF_SIZE];
+    char file[PROG4_BUFF_SIZE];
     unsigned int counter = 0;
     int fileRecvd;
 
     while(counter < fileSize){
-        int minRecVal = min(PROG3_BUFF_SIZE, fileSize - counter);
+        int minRecVal = min(PROG4_BUFF_SIZE, fileSize - counter);
         fileRecvd = recv(sock, file, minRecVal, 0);
         if(fileRecvd < 0) 
         {

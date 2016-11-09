@@ -21,7 +21,7 @@
 #include <dirent.h>
 #include <sys/time.h>
 
-#define PROG3_BUFF_SIZE 4096
+#define PROG4_BUFF_SIZE 4096
 
 int udpSend(int sock, void *data, size_t data_len, 
             struct sockaddr_in *dest_addr, socklen_t dest_len, 

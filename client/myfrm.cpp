@@ -14,11 +14,36 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-    //Argument handling stuff
-    const char *hostname = "student03.cse.nd.edu";
-    const int portNumber = 41032;
-
+    //Argument handling
     int status;
+    if (argc != 3)
+    {
+        fprintf(stderr, "Wrong number of arguments.\n"
+                "Proper usage: myftp Server_Name Port\n");
+        exit(1);
+    }
+    
+    //grab arguments
+    char *hostname = argv[1];
+    char *portNumberStr = argv[2];
+    int portNumber;
+
+    //Parse the port
+    status = stringToInt(&portNumber, portNumberStr, 0, INT_MAX);
+    if (status == 1)
+    {
+        fprintf(stderr, "Error: Negative port value.\n");
+    }
+    else if (status == 2)
+    {
+        fprintf(stderr, "Error: Port value out of integer range!\n");
+    }
+    else if (status == 3)
+    {
+        fprintf(stderr, "Error: Unrecognized characters in port (%s)\n", 
+                portNumberStr);
+    }
+    if (status) exit(1);
 
     //Create the Server's address structure
     //Get Ip Address from name
