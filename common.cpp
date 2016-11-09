@@ -49,7 +49,7 @@ int udpSend(int sock, void *data, size_t data_len,
   returns number of bytes sent
  */
 int udpStrSend(int sock, const char *stringToSend, 
-               struct sockaddr *dest_addr, socklen_t dest_len,
+               struct sockaddr_in *dest_addr, socklen_t dest_len,
                const char *errorMsg)
 {
     int bytesSent;
