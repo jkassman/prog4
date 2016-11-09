@@ -23,11 +23,14 @@
 
 #define PROG3_BUFF_SIZE 4096
 
-int udpSend(int sock, void *data, size_t data_len, struct sockaddr *dest_addr, 
-            socklen_t dest_len, const char *errorMsg);
-int udpStrSend(int sock, const char *stringToSend, struct sockaddr *dest_addr, 
+int udpSend(int sock, void *data, size_t data_len, 
+            struct sockaddr_in *dest_addr, socklen_t dest_len, 
+            const char *errorMsg);
+int udpStrSend(int sock, const char *stringToSend, 
+               struct sockaddr_in *dest_addr, 
                socklen_t dest_len, const char *errorMsg);
-int udpRecv(int sock, void *data, size_t data_len, struct sockaddr *address, 
+int udpRecv(int sock, void *data, size_t data_len, 
+            struct sockaddr_in *address, 
             socklen_t *address_len, const char *errorMsg);
 
 int tcpRecv(int sock, void *data, size_t data_len, const char *errorMsg);
