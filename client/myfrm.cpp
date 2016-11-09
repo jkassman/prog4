@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     int tcpSock = socket(PF_INET, SOCK_STREAM, 0);
     if (tcpSock < 0)
     {
-        perror("Failed to Create TCP Socket");
+        perror("Failed to create TCP Socket");
         exit(2);
     }
 
@@ -46,12 +46,33 @@ int main(int argc, char **argv)
         exit(2);
     }
 
+    int udpSock = socket(PF_INET, SOCK_DGRAM, 0);
+    if (udpSock < 0)
+    {
+        perror("Failed to create UPD Socket");
+        exit(2);
+    }
+
+    //setup complete, now we're ready to do stuff!
+
+    //THE FOLLOWING IS 100% DEBUGGING
+    //debug messages to make sure the connection is working!
     char buffy[1001];
-    //debug messages to make sure the connection is working
-    tcpStrSend(tcpSock, "This is a test. Also, the Soviets have invaded.\n", "Could not send test");
-    tcpRecv(tcpSock, buffy, 1000, "error receiving test message");
-    cout << buffy;
+    tcpStrSend(tcpSock, "This is a TCP test. Also, the Soviets have invaded.\n", "Could not send TCP test");
+    tcpRecv(tcpSock, buffy, 1000, "error receiving TCP test message");
+    cout << "TCP Received: " << buffy << endl;
     close(tcpSock);
+
+    socklen_t test = sizeof(struct sockaddr);
+
+    udpStrSend(udpSock, "This is a UDP test. All systems normal.\n", &sinbad,
+              test, "error sending UDP test");
+
+    struct sockaddr_in serverbad;
+    socklen_t serverlen = sizeof(struct sockaddr);
+    udpRecv(udpSock, buffy, 1000, &serverbad, &serverlen, "error receiving UDP test");
+    
+    cout << "UDP Received: " << buffy << endl;
 
     exit(0);
 }
