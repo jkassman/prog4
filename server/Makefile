@@ -4,11 +4,11 @@
 #  Makefile 
 #  Makefile for our server code.
 
-myftpd: myftpd.c common.o
-	gcc -Wall myftpd.c common.o -o myftpd -lmhash
+myfrmd: myfrmd.c common.o
+	g++ -Wall myfrmd.c common.o -o myfrmd -lmhash
 
-common.o: ../common.c ../common.h
-	gcc -c ../common.c ../common.h -Wall -lmhash
+common.o: ../common.cpp ../common.hpp
+	g++ -c ../common.cpp ../common.hpp -Wall -lmhash
 
 clean:
-	rm myftpd common.o
+	rm myfrmd common.o
