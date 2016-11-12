@@ -20,6 +20,8 @@ void serverCreate(int sock, string currentUser){
   udpRecv(sock,boardName,1000,&client_addr,&addr_len,"myfrmd");
   printf("Board Name is:%s",boardName);
 
+  //loop through boardVec to make sure boardName is unique
+
   board b1(currentUser,boardName);
   //push to a vector of boards
 }
