@@ -8,6 +8,8 @@
  */
 
 #include "../common.hpp"
+#include <string>
+#include <map>
 
 void serverCreate(int sock){
   struct sockaddr_in client_addr;
@@ -150,6 +152,49 @@ int main(int argc, char * argv[]){
     printf("Client Quit!\n");
     close(ntcp_s);
   }
+  
+  /*
+  //Make the map:
+  map <string, string> users;
+
+  //Sends request for the username:
+  string requestName = "Please enter your desired username: ";
+  udpSend(udpSock, requestName.c_str(), requestName.length(), &sin, sizeof(struct sockaddr), "Could not send username request");
+
+  //Receives username:
+  struct sockaddr_in sine;
+  socklen_t sinelen = sizeof(sine);
+  char buffy[1001];
+  bool exists = false;
+
+  udpRecv(udpSock, buffy, 1000, &sine, &sinelen, "Did not receive username");
+  string username = buffy;
+
+  //Checks to see if it is a new user or existing user:
+  for(map<string, string>::iterator it = users.begin(); it != users.end(); ++it) {
+   if(it->first == buffy) {
+    password = it->second;
+    exists = true;
+   }
+  }
+
+  //Requests password:
+  if (exists) {
+   string message = "Please enter your current password: ";
+  }else{
+   string message = "Welcome! Please enter the password you would like to use: ";
+  }
+  udpSend(udpSock, message.c_str(), message.length(), &sin, sizeof(struct sockaddr), "Could not send password request");
+
+  //Receives password:
+  udpRecv(udpSock, buffy, 1000, &sine, &sinelen, "Did not receive password information");
+
+  //Checks to see if there is a new user or see if the password matches:
+
+  //Sends acknowledgment to the client:
+
+  /*
+  //Wait for operation from client:
   
   close(udp_s);
   close(tcp_s);
