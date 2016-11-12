@@ -75,26 +75,26 @@ int main(int argc, char * argv[]){
   tcpStrSend(new_s, "Test", "myfrmd");
 
   printf("Received:%s",message);
-  /*
-  //Make the map:
+  
+  //Make the map and other variables:
   map <string, string> users;
+  struct sockaddr_in sine;
+  socklen_t sinelen = sizeof(sine);
+  char buffy[1001];
+  bool exists = false;
+  string password, username, messageSend;
 
   //Sends request for the username:
   string requestName = "Please enter your desired username: ";
   udpSend(udpSock, requestName.c_str(), requestName.length(), &sin, sizeof(struct sockaddr), "Could not send username request");
 
   //Receives username:
-  struct sockaddr_in sine;
-  socklen_t sinelen = sizeof(sine);
-  char buffy[1001];
-  bool exists = false;
-
   udpRecv(udpSock, buffy, 1000, &sine, &sinelen, "Did not receive username");
-  string username = buffy;
+  username = buffy;
 
   //Checks to see if it is a new user or existing user:
   for(map<string, string>::iterator it = users.begin(); it != users.end(); ++it) {
-   if(it->first == buffy) {
+   if(it->first == username) {
     password = it->second;
     exists = true;
    }
@@ -102,20 +102,30 @@ int main(int argc, char * argv[]){
 
   //Requests password:
   if (exists) {
-   string message = "Please enter your current password: ";
   }else{
-   string message = "Welcome! Please enter the password you would like to use: ";
+    messageSend = "Welcome! Please enter the password you would like to use: ";
   }
-  udpSend(udpSock, message.c_str(), message.length(), &sin, sizeof(struct sockaddr), "Could not send password request");
+  udpSend(udpSock, messageSend.c_str(), messageSend.length(), &sin, sizeof(struct sockaddr), "Could not send password request");
 
   //Receives password:
   udpRecv(udpSock, buffy, 1000, &sine, &sinelen, "Did not receive password information");
+  password = buffy;
 
   //Checks to see if there is a new user or see if the password matches:
+  if (exists) {
+    if(password = users[username]) {
+      messageSend = "The passwords matched! You have successfully logged in."
+    }else{
+      messageSend = "The entered password was incorrect."
+    }
+  }else{
+    users[username] = password;
+    message = "Account setup has been completed. Welcome to 21st Century Forums!"
+  }  
 
   //Sends acknowledgment to the client:
+  udpSend(udpSock, messageSend.c_str(), messageSend.length(), &sin, sizeof(struct sockaddr), "Could not send log in acknowledgement.");
 
-  /*
   //Wait for operation from client:
   
   close(s);

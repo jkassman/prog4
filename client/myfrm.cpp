@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     }
 
     //setup complete, now we're ready to do stuff!
-/* 
+
    //Receives request from the server to send username:
    char buffy[1001];
    struct sockaddr_in sinebard;
@@ -99,8 +99,8 @@ int main(int argc, char **argv)
    //Client sends the username:
    cout << buffy << endl;
    cin >> username;
-   int len = strlen(username.c_str())+1;
-   udpSend(udpSock, username.c_str(), len, &sinbad, sizeof(struct sockaddr), "Could not send username");
+  // int len = strlen(username.c_str())+1;
+   udpStrSend(udpSock, username.c_str(), &sinbad, sizeof(struct sockaddr), "Could not send username");
 
    //Receives request from the server to send the password:
    udpRecv(udpSock, buffy, 1000, &sinebard, &sinebardlen, "Could not receive server request for password.");
@@ -108,18 +108,18 @@ int main(int argc, char **argv)
    //Client sends the password:
    cout << buffy << endl;
    cin >> password;
-   int len2 = strlen(password.c_str())+1;
-   udpSend(udpSock, password.c_str(), len2, &sinbad, sizeof(struct sockaddr), "Could not send password");
+   //int len2 = strlen(password.c_str())+1;
+   udpStrSend(udpSock, password.c_str(), &sinbad, sizeof(struct sockaddr), "Could not send password");
 
     //Ack that the user is now logged in:
     udpRecv(udpSock, buffy, 1000, &sinebard, &sinebardlen, "Did not receive password information");
-    if(strcmp(buffy, "Username does not match password given.") != 0) {
+    if(strcmp(buffy, "The entered password was incorrect.") != 0) {
       cout << buffy << endl;
       exit(1);
     }else{
       cout << buffy << endl;
     }
-    */
+
     //Prompt user for operation state:
 
     //THE FOLLOWING IS 100% DEBUGGING
