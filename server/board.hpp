@@ -12,20 +12,20 @@
 #include <vector>
 #include <string>
 
-class board{
-  struct message{
-    string user;
-    string text;
-  }
-  vector<message> messageVec;
-  string name;
-  string creator;
+using namespace std;
 
+struct message{
+  string user;
+  string text;
+};
+
+class board{
   public:
+    vector<message> messageVec;
+    string name;
+    string creator;
+
     board(string user, string name);
-//messageVec
-//message struct each message has user and text
-//create function, pass user and name
 };
 
 #endif

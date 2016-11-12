@@ -7,14 +7,17 @@
   ???Creates a TCP server able to receive several commands from a client.???
  */
 
-#include "../common.hpp"
 #include <string>
 #include <map>
 #include <iostream>
+#include <vector>
+
+#include "../common.hpp"
+#include "board.hpp"
 
 using namespace std;
 
-void serverCreate(int sock, string currentUser){
+string serverCreate(int sock, string currentUser, vector<board> & boardVec){
   struct sockaddr_in client_addr;
   socklen_t addr_len;
   char boardName[1000];
@@ -24,16 +27,33 @@ void serverCreate(int sock, string currentUser){
   printf("Board Name is:%s",boardName);
 
   //loop through boardVec to make sure boardName is unique
-
-  //board b1(currentUser,boardName);
-  //push to a vector of boards
+  vector<board>::iterator it;
+  bool nameExists = false;
+  for (it = boardVec.begin(); it != boardVec.end(); ++it)
+  {
+      if (boardName == it->name)
+      { //exists, so don't create
+          nameExists = true;
+      }
+  }
+  if (nameExists)
+  {
+      return "Error: A board with that name already exists!\n";
+  }
+  else
+  {
+      board b1(currentUser,boardName);
+      boardVec.push_back(b1);
+      return "Board successfully created\n";
+  }
 }
 
 int main(int argc, char * argv[]){
   struct sockaddr_in sin, client_addr;
-  char message[PROG4_BUFF_SIZE];
+  string message;
   socklen_t len, addr_len;
   int tcp_s, udp_s, ntcp_s, port, bytesRec;
+  vector<board> boardVec;
 
   //check for correct number of arguments and assign arguments to variables
   if (argc==2){
@@ -115,7 +135,8 @@ int main(int argc, char * argv[]){
       bool exists = false;
       string password, username, messageSend;
       socklen_t sinlen = sizeof(sin);
-
+      string operationsMessage = "Please enter one of these codes:\nCRT: Create Board, LIS: List Boards, MSG: Leave Message, DLT: Delete Message, RDB: Read Board, EDT: Edit Message, APN: Append File, DWN: Download File, DST: Destroy Board, XIT: Exit, SHT: Shutdown Server\n";
+      
       //Receive acknowledgement from client to finish UDP set-up:
       udpRecv(udp_s, buffy, PROG4_BUFF_SIZE, &sin, &sinlen, 
               "Did not receive UDP initialization");
@@ -177,7 +198,7 @@ int main(int argc, char * argv[]){
           }
           if (!wrongPass)
           {
-              messageSend += "Please enter one of these codes:\nCRT: Create Board, LIS: List Boards, MSG: Leave Message, DLT: Delete Message, RDB: Read Board, EDT: Edit Message, APN: Append File, DWN: Download File, DST: Destroy Board, XIT: Exit, SHT: Shutdown Server\n";
+              messageSend += operationsMessage;
           }
           //Sends acknowledgment to the client:
           udpStrSend(udp_s, messageSend.c_str(), &sin, sizeof(struct sockaddr), 
@@ -190,7 +211,7 @@ int main(int argc, char * argv[]){
                               "Could not receive client opcode");
           if(bytesRec==0) break; //client ^C
           if(strcmp("CRT",buffy)==0){
-              serverCreate(udp_s, username);
+              message = serverCreate(udp_s, username, boardVec);
           }
           else if(strcmp("LIS",buffy)==0){
               //serverUpload(udp_s);
@@ -222,13 +243,15 @@ int main(int argc, char * argv[]){
               break; //exit inner while loop
           }
           else if(strcmp("SHT",buffy)==0){
-              strcpy(message,"Not currently functional");
+              //strcpy(message,"Not currently functional");
           }
           else{
-              strcpy(message,"Send a correct command\n");
+              //strcpy(message,"Send a correct command\n");
           }
-          printf("TCP Server Received:%s\n",buffy);
-          //tcpStrSend(ntcp_s,message,"myfrmd"); 
+          printf("Received:%s\n",buffy);
+          message += operationsMessage;
+          udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), 
+                     "Could not send action response message");
       }
       printf("Client Quit!\n");
       close(ntcp_s);

@@ -4,11 +4,14 @@
 #  Makefile 
 #  Makefile for our server code.
 
-myfrmd: myfrmd.cpp common.o
-	g++ -Wall myfrmd.cpp common.o -o myfrmd -lmhash
+myfrmd: myfrmd.cpp common.o board.o
+	g++ -Wall myfrmd.cpp common.o board.o -o myfrmd -lmhash
+
+board.o: board.cpp board.hpp
+	g++ -c board.cpp -Wall
 
 common.o: ../common.cpp ../common.hpp
-	g++ -c ../common.cpp ../common.hpp -Wall -lmhash
+	g++ -c ../common.cpp -Wall -lmhash
 
 clean:
-	rm myfrmd common.o
+	rm myfrmd common.o board.o

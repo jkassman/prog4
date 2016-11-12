@@ -9,7 +9,6 @@
 #include "board.hpp"
 
 board::board(string u,string n){
-  creator = u;
-  name = n;
-  //init messages
+  this->creator = u;
+  this->name = n;
 }
