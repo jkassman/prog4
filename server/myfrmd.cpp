@@ -11,7 +11,7 @@
 #include <string>
 #include <map>
 
-void serverCreate(int sock){
+void serverCreate(int sock, string currentUser){
   struct sockaddr_in client_addr;
   socklen_t addr_len;
   char boardName[1000];
@@ -20,14 +20,7 @@ void serverCreate(int sock){
   udpRecv(sock,boardName,1000,&client_addr,&addr_len,"myfrmd");
   printf("Board Name is:%s",boardName);
 
-  //make da bored
-  //so we need to have a bunch of boreds. Each bored needs to store stuff.
-  //like its name and who created it, and a bunch of messages attached to it.
-  //so...maybe create a bored object? class? struct?
-  //    and have a vector of those?
-  //    but make sure that two boreds are never named the same thing
-  //later, when asked for a bored, we can generate a bored file based on
-  //  the bored object/class/struct.
+  board b1(currentUser,boardName);
 }
 
 int main(int argc, char * argv[]){
