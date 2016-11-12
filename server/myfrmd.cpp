@@ -31,7 +31,6 @@ void serverCreate(int sock, string currentUser){
 
 int main(int argc, char * argv[]){
   struct sockaddr_in sin, client_addr;
-  char buf[PROG4_BUFF_SIZE];
   char message[PROG4_BUFF_SIZE];
   socklen_t len, addr_len;
   int tcp_s, udp_s, ntcp_s, port, bytesRec;
@@ -146,18 +145,18 @@ int main(int argc, char * argv[]){
           }
       }
 
+      //Requests password:
+      if (exists) {
+          messageSend = "Please enter your password: ";
+      }else{
+          messageSend = "Welcome! Please enter the password you would like to use: ";
+      }
+      udpStrSend(udp_s, messageSend.c_str(), &sin, sizeof(struct sockaddr), 
+                 "Could not send password request");
+
       bool wrongPass = true;
       while (wrongPass)
-      {
-          //Requests password:
-          if (exists) {
-              messageSend = "Please enter your password: ";
-          }else{
-              messageSend = "Welcome! Please enter the password you would like to use: ";
-          }
-          udpStrSend(udp_s, messageSend.c_str(), &sin, sizeof(struct sockaddr), 
-                     "Could not send password request");
-
+          {
           //Receives password:
           udpRecv(udp_s, buffy, PROG4_BUFF_SIZE, &sine, &sinelen, 
                   "Did not receive password information");
@@ -169,13 +168,14 @@ int main(int argc, char * argv[]){
                   messageSend = "The passwords matched! You have successfully logged in.";
                   wrongPass = false;
               }else{
-                  messageSend = "The entered password was incorrect.";
+                  messageSend = "The entered password was incorrect. Please try again: ";
               }
           }else{
               users[username] = password;
               messageSend = "Account setup has been completed. Welcome to 12st Century Forums!";
               wrongPass = false;
           }
+          messageSend += "Please enter one of these codes:\nCRT: Create Board, LIS: List Boards, MSG: Leave Message, DLT: Delete Message, RDB: Read Board, EDT: Edit Message, APN: Append File, DWN: Download File, DST: Destroy Board, XIT: Exit, SHT: Shutdown Server\n";
           //Sends acknowledgment to the client:
           udpStrSend(udp_s, messageSend.c_str(), &sin, sizeof(struct sockaddr), 
                      "Could not send log in acknowledgement.");
@@ -183,48 +183,48 @@ int main(int argc, char * argv[]){
 
       //Wait for operation from client:
       while(1){
-          if((bytesRec=recv(ntcp_s,buf,sizeof(buf),0))==-1){
-              perror("Server Received Error!");
-              exit(1);
-          }
+          bytesRec =  udpRecv(udp_s, buffy, PROG4_BUFF_SIZE, &sine, &sinelen, 
+                              "Could not receive client opcode");
           if(bytesRec==0) break; //client ^C
-          if(strcmp("CRT",buf)==0){
+          if(strcmp("CRT",buffy)==0){
               serverCreate(udp_s, username);
           }
-          else if(strcmp("LIS",buf)==0){
+          else if(strcmp("LIS",buffy)==0){
               //serverUpload(udp_s);
           }
-          else if(strcmp("MSG",buf)==0){
+          else if(strcmp("MSG",buffy)==0){
               //serverList(udp_s);
           }
-          else if(strcmp("DLT",buf)==0){
+          else if(strcmp("DLT",buffy)==0){
               //serverDelete(udp_s);
           }
-          else if(strcmp("RDB",buf)==0){
+          else if(strcmp("RDB",buffy)==0){
               //serverMKD(ntcp_s);
           }
-          else if(strcmp("EDT",buf)==0){
+          else if(strcmp("EDT",buffy)==0){
               //serverRMD(udp_s);
           }
-          else if(strcmp("APN",buf)==0){
+          else if(strcmp("APN",buffy)==0){
               //serverCHD(ntcp_s);
           }
-          else if(strcmp("DWN",buf)==0){
+          else if(strcmp("DWN",buffy)==0){
               //serverCHD(ntcp_s);
           }
-          else if(strcmp("DST",buf)==0){
+          else if(strcmp("DST",buffy)==0){
               //serverCHD(udp_s);
           }
-          else if(strcmp("XIT",buf)==0){
-              strcpy(message,"Not currently functional");
+          else if(strcmp("XIT",buffy)==0){
+              udpStrSend(udp_s, "XIT", &sin, sizeof(struct sockaddr), 
+                         "Could not send log in acknowledgement.");
+              break; //exit inner while loop
           }
-          else if(strcmp("SHT",buf)==0){
+          else if(strcmp("SHT",buffy)==0){
               strcpy(message,"Not currently functional");
           }
           else{
               strcpy(message,"Send a correct command\n");
           }
-          printf("TCP Server Received:%s\n",buf);
+          printf("TCP Server Received:%s\n",buffy);
           //tcpStrSend(ntcp_s,message,"myfrmd"); 
       }
       printf("Client Quit!\n");
