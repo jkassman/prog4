@@ -21,6 +21,7 @@ void serverCreate(int sock, string currentUser){
   printf("Board Name is:%s",boardName);
 
   board b1(currentUser,boardName);
+  //push to a vector of boards
 }
 
 int main(int argc, char * argv[]){
