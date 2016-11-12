@@ -97,6 +97,7 @@ int main(int argc, char * argv[]){
       exit(1);
   }
 
+  map<string, string> users;
   //this loop runs every time a client connects to the server
   while (1)
   {
@@ -109,7 +110,6 @@ int main(int argc, char * argv[]){
       addr_len = sizeof(client_addr);
 
       //Make the user, password map:
-      map<string, string> users;
       struct sockaddr_in sine;
       socklen_t sinelen = sizeof(sine);
       char buffy[PROG4_BUFF_SIZE];
@@ -138,7 +138,8 @@ int main(int argc, char * argv[]){
       username = buffy;
 
       //Checks to see if it is a new user or existing user:
-      for(map<string, string>::iterator it = users.begin(); it != users.end(); ++it) {
+      for(map<string, string>::iterator it = users.begin(); 
+          it != users.end(); ++it) {
           if(it->first == username) {
               password = it->second;
               exists = true;
@@ -188,7 +189,7 @@ int main(int argc, char * argv[]){
           }
           if(bytesRec==0) break; //client ^C
           if(strcmp("CRT",buf)==0){
-              //serverCreate(udp_s);
+              serverCreate(udp_s, username);
           }
           else if(strcmp("LIS",buf)==0){
               //serverUpload(udp_s);
@@ -224,7 +225,7 @@ int main(int argc, char * argv[]){
               strcpy(message,"Send a correct command\n");
           }
           printf("TCP Server Received:%s\n",buf);
-          tcpStrSend(ntcp_s,message,"myfrmd"); 
+          //tcpStrSend(ntcp_s,message,"myfrmd"); 
       }
       printf("Client Quit!\n");
       close(ntcp_s);
