@@ -10,6 +10,9 @@
 #include "../common.hpp"
 #include <string>
 #include <map>
+#include <iostream>
+
+using namespace std;
 
 void serverCreate(int sock, string currentUser){
   struct sockaddr_in client_addr;
@@ -102,6 +105,64 @@ int main(int argc, char * argv[]){
 
   printf("Hello, and Welcome to the Server of the 12st Century!\n");
 
+  //Make the map:
+  map<string, string> users;
+  struct sockaddr_in sine;
+  socklen_t sinelen = sizeof(sine);
+  char buffy[1001];
+  bool exists = false;
+  string password, username, messageSend;
+  socklen_t sinlen = sizeof(sin);
+
+  //Receive acknowledgement from client to finish UDP set-up:
+  udpRecv(udp_s, buffy, 1000, &sin, &sinlen, "Did not receive username");
+  //Debug:
+  cout << buffy << endl;
+
+  //Sends request for the username:
+  string requestName = "Please enter your desired username: ";
+  udpStrSend(udp_s, requestName.c_str(), &sin, sizeof(struct sockaddr), "Could not send username request");
+
+  //Receives username:
+  udpRecv(udp_s, buffy, 1000, &sine, &sinelen, "Did not receive username");
+  username = buffy;
+
+  //Checks to see if it is a new user or existing user:
+  for(map<string, string>::iterator it = users.begin(); it != users.end(); ++it) {
+   if(it->first == username) {
+    password = it->second;
+    exists = true;
+   }
+  }
+
+  //Requests password:
+  if (exists) {
+  }else{
+    messageSend = "Welcome! Please enter the password you would like to use: ";
+  }
+  udpStrSend(udp_s, messageSend.c_str(), &sin, sizeof(struct sockaddr), "Could not send password request");
+
+  //Receives password:
+  udpRecv(udp_s, buffy, 1000, &sine, &sinelen, "Did not receive password information");
+  password = buffy;
+
+  //Checks to see if there is a new user or see if the password matches:
+  if (exists) {
+    if(password == users[username]) {
+      messageSend = "The passwords matched! You have successfully logged in.";
+    }else{
+      messageSend = "The entered password was incorrect.";
+    }
+  }else{
+    users[username] = password;
+    messageSend = "Account setup has been completed. Welcome to 21st Century Forums!";
+  }  
+
+  //Sends acknowledgment to the client:
+  udpStrSend(udp_s, messageSend.c_str(), &sin, sizeof(struct sockaddr), "Could not send log in acknowledgement.");
+
+  //Wait for operation from client:
+
   while(1){
     if((ntcp_s = accept(tcp_s,(struct sockaddr *)&sin,&len))<0){
         perror("myfrmd:accept");
@@ -155,49 +216,6 @@ int main(int argc, char * argv[]){
     printf("Client Quit!\n");
     close(ntcp_s);
   }
-  
-  /*
-  //Make the map:
-  map <string, string> users;
-
-  //Sends request for the username:
-  string requestName = "Please enter your desired username: ";
-  udpSend(udpSock, requestName.c_str(), requestName.length(), &sin, sizeof(struct sockaddr), "Could not send username request");
-
-  //Receives username:
-  struct sockaddr_in sine;
-  socklen_t sinelen = sizeof(sine);
-  char buffy[1001];
-  bool exists = false;
-
-  udpRecv(udpSock, buffy, 1000, &sine, &sinelen, "Did not receive username");
-  string username = buffy;
-
-  //Checks to see if it is a new user or existing user:
-  for(map<string, string>::iterator it = users.begin(); it != users.end(); ++it) {
-   if(it->first == buffy) {
-    password = it->second;
-    exists = true;
-   }
-  }
-
-  //Requests password:
-  if (exists) {
-   string message = "Please enter your current password: ";
-  }else{
-   string message = "Welcome! Please enter the password you would like to use: ";
-  }
-  udpSend(udpSock, message.c_str(), message.length(), &sin, sizeof(struct sockaddr), "Could not send password request");
-
-  //Receives password:
-  udpRecv(udpSock, buffy, 1000, &sine, &sinelen, "Did not receive password information");
-
-  //Checks to see if there is a new user or see if the password matches:
-
-  //Sends acknowledgment to the client:
-
-  /*
-  //Wait for operation from client:
   
   close(udp_s);
   close(tcp_s);
