@@ -51,41 +51,39 @@ string serverCreate(int sock, string currentUser, vector<board> & boardVec, sock
 }
 
 string serverMessage(){
-
-  
-
+    return "";
 }
 
 string serverDelete(){
-
+    return "";
 }
 
 string serverEdit(){
-
+    return "";
 }
 
 string serverList(){
-
+    return "";
 }
 
 string serverRead(){
-
+    return "";
 }
 
 string serverAppend(){
-
+    return "";
 }
 
 string serverDownload(){
-
+    return "";
 }
 
 string serverDestroy(){
-
+    return "";
 }
 
 string serverShutdown(){
-
+    return "";
 }
 
 int main(int argc, char * argv[]){
@@ -171,7 +169,7 @@ int main(int argc, char * argv[]){
       socklen_t sinelen = sizeof(sine);
       char buffy[PROG4_BUFF_SIZE];
       bool exists = false;
-      string password, username, messageSend;
+      string password, username;
       socklen_t sinlen = sizeof(sin);
       string operationsMessage = "Please enter one of these codes:\nCRT: Create Board, LIS: List Boards, MSG: Leave Message, DLT: Delete Message, RDB: Read Board, EDT: Edit Message, APN: Append File, DWN: Download File, DST: Destroy Board, XIT: Exit, SHT: Shutdown Server\n";
       
@@ -206,11 +204,11 @@ int main(int argc, char * argv[]){
 
       //Requests password:
       if (exists) {
-          messageSend = "Please enter your password: ";
+          message = "Please enter your password: ";
       }else{
-          messageSend = "Welcome! Please enter the password you would like to use: ";
+          message = "Welcome! Please enter the password you would like to use: ";
       }
-      udpStrSend(udp_s, messageSend.c_str(), &sin, sizeof(struct sockaddr), 
+      udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), 
                  "Could not send password request");
 
       bool wrongPass = true;
@@ -224,22 +222,22 @@ int main(int argc, char * argv[]){
           //Checks to see if there is a new user or see if the password matches:
           if (exists) {
               if(password == users[username]) {
-                  messageSend = "The passwords matched! You have successfully logged in.\n";
+                  message = "The passwords matched! You have successfully logged in.\n";
                   wrongPass = false;
               }else{
-                  messageSend = "The entered password was incorrect. Please try again: ";
+                  message = "The entered password was incorrect. Please try again: ";
               }
           }else{
               users[username] = password;
-              messageSend = "Account setup has been completed. Welcome to 12st Century Forums!\n";
+              message = "Account setup has been completed. Welcome to 12st Century Forums!\n";
               wrongPass = false;
           }
           if (!wrongPass)
           {
-              messageSend += operationsMessage;
+              message += operationsMessage;
           }
           //Sends acknowledgment to the client:
-          udpStrSend(udp_s, messageSend.c_str(), &sin, sizeof(struct sockaddr), 
+          udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), 
                      "Could not send log in acknowledgement.");
       }
 
