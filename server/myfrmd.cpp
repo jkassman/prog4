@@ -51,39 +51,39 @@ string serverCreate(int sock, string currentUser, vector<board> & boardVec, sock
 }
 
 string serverMessage(){
-
+    return "";
 }
 
 string serverDelete(){
-
+    return "";
 }
 
 string serverEdit(){
-
+    return "";
 }
 
 string serverList(){
-
+    return "";
 }
 
 string serverRead(){
-
+    return "";
 }
 
 string serverAppend(){
-
+    return "";
 }
 
 string serverDownload(){
-
+    return "";
 }
 
 string serverDestroy(){
-
+    return "";
 }
 
 string serverShutdown(){
-
+    return "";
 }
 
 int main(int argc, char * argv[]){
