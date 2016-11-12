@@ -10,13 +10,35 @@
 #include "../common.hpp"
 #include <string>
 #include <map>
+#include <iostream>
+
+using namespace std;
+
+void serverCreate(int sock){
+  struct sockaddr_in client_addr;
+  socklen_t addr_len;
+  char boardName[1000];
+  addr_len = sizeof(client_addr);
+
+  udpRecv(sock,boardName,1000,&client_addr,&addr_len,"myfrmd");
+  printf("Board Name is:%s",boardName);
+
+  //make da bored
+  //so we need to have a bunch of boreds. Each bored needs to store stuff.
+  //like its name and who created it, and a bunch of messages attached to it.
+  //so...maybe create a bored object? class? struct?
+  //    and have a vector of those?
+  //    but make sure that two boreds are never named the same thing
+  //later, when asked for a bored, we can generate a bored file based on
+  //  the bored object/class/struct.
+}
 
 int main(int argc, char * argv[]){
-  struct sockaddr_in sin;
-  //char buf[PROG3_BUFF_SIZE];
-  char message[PROG3_BUFF_SIZE];
-  socklen_t len;
-  int s, new_s, port;
+  struct sockaddr_in sin, client_addr;
+  char buf[PROG4_BUFF_SIZE];
+  char message[PROG4_BUFF_SIZE];
+  socklen_t len, addr_len;
+  int tcp_s, udp_s, ntcp_s, port, bytesRec;
 
   //check for correct number of arguments and assign arguments to variables
   if (argc==2){
@@ -49,47 +71,57 @@ int main(int argc, char * argv[]){
   sin.sin_port = htons(port);
 
   /*setup passive open*/
-  if((s=socket(PF_INET,SOCK_STREAM,0))<0){
+  if((tcp_s=socket(PF_INET,SOCK_STREAM,0))<0){
     perror("myftpd:socket");
     exit(1);
   }
   //bind socket to specified address
-  if((bind(s,(struct sockaddr *)&sin,sizeof(sin)))<0){
+  if((bind(tcp_s,(struct sockaddr *)&sin,sizeof(sin)))<0){
     perror("myftpd: bind");
     exit(1);
   }
   //listen to the socket
-  if((listen(s,0))<0){
+  if((listen(tcp_s,0))<0){
     perror("myftpd:listen");
     exit(1);
   }
 
-  printf("Hello, and Welcome to the Server of the 12st Century!\n");
-  
-  if((new_s = accept(s,(struct sockaddr *)&sin,&len))<0){
-      perror("myfrmd:accept");
-      exit(1);
+  //setup passive open
+  if((udp_s = socket(PF_INET,SOCK_DGRAM,0)) < 0){
+    perror("simplex-talk:socket");
+    exit(1);
   }
 
-  tcpRecv(new_s, message, sizeof(message), "myfrmd");
-  tcpStrSend(new_s, "Test", "myfrmd");
+  //bind the created socket to the specified address
+  if((bind(udp_s,(struct sockaddr *)&sin, sizeof(sin))) < 0) {
+    perror("simplex-talk:bind");
+    exit(1);
+  }
 
-  printf("Received:%s",message);
-  
-  //Make the map and other variables:
-  map <string, string> users;
+  addr_len = sizeof(client_addr);
+
+  printf("Hello, and Welcome to the Server of the 12st Century!\n");
+
+  //Make the map:
+  map<string, string> users;
   struct sockaddr_in sine;
   socklen_t sinelen = sizeof(sine);
   char buffy[1001];
   bool exists = false;
   string password, username, messageSend;
+  socklen_t sinlen = sizeof(sin);
+
+  //Receive acknowledgement from client to finish UDP set-up:
+  udpRecv(udp_s, buffy, 1000, &sin, &sinlen, "Did not receive username");
+  //Debug:
+  cout << buffy << endl;
 
   //Sends request for the username:
   string requestName = "Please enter your desired username: ";
-  udpSend(udpSock, requestName.c_str(), requestName.length(), &sin, sizeof(struct sockaddr), "Could not send username request");
+  udpStrSend(udp_s, requestName.c_str(), &sin, sizeof(struct sockaddr), "Could not send username request");
 
   //Receives username:
-  udpRecv(udpSock, buffy, 1000, &sine, &sinelen, "Did not receive username");
+  udpRecv(udp_s, buffy, 1000, &sine, &sinelen, "Did not receive username");
   username = buffy;
 
   //Checks to see if it is a new user or existing user:
@@ -105,28 +137,83 @@ int main(int argc, char * argv[]){
   }else{
     messageSend = "Welcome! Please enter the password you would like to use: ";
   }
-  udpSend(udpSock, messageSend.c_str(), messageSend.length(), &sin, sizeof(struct sockaddr), "Could not send password request");
+  udpStrSend(udp_s, messageSend.c_str(), &sin, sizeof(struct sockaddr), "Could not send password request");
 
   //Receives password:
-  udpRecv(udpSock, buffy, 1000, &sine, &sinelen, "Did not receive password information");
+  udpRecv(udp_s, buffy, 1000, &sine, &sinelen, "Did not receive password information");
   password = buffy;
 
   //Checks to see if there is a new user or see if the password matches:
   if (exists) {
-    if(password = users[username]) {
-      messageSend = "The passwords matched! You have successfully logged in."
+    if(password == users[username]) {
+      messageSend = "The passwords matched! You have successfully logged in.";
     }else{
-      messageSend = "The entered password was incorrect."
+      messageSend = "The entered password was incorrect.";
     }
   }else{
     users[username] = password;
-    message = "Account setup has been completed. Welcome to 21st Century Forums!"
+    messageSend = "Account setup has been completed. Welcome to 21st Century Forums!";
   }  
 
   //Sends acknowledgment to the client:
-  udpSend(udpSock, messageSend.c_str(), messageSend.length(), &sin, sizeof(struct sockaddr), "Could not send log in acknowledgement.");
+  udpStrSend(udp_s, messageSend.c_str(), &sin, sizeof(struct sockaddr), "Could not send log in acknowledgement.");
 
   //Wait for operation from client:
+
+  while(1){
+    if((ntcp_s = accept(tcp_s,(struct sockaddr *)&sin,&len))<0){
+        perror("myfrmd:accept");
+        exit(1);
+    }
+    while(1){
+      if((bytesRec=recv(ntcp_s,buf,sizeof(buf),0))==-1){
+        perror("Server Received Error!");
+        exit(1);
+      }
+      if(bytesRec==0) break; //client ^C
+      if(strcmp("CRT",buf)==0){
+	serverCreate(udp_s);
+      }
+      else if(strcmp("LIS",buf)==0){
+        //serverUpload(udp_s);
+      }
+      else if(strcmp("MSG",buf)==0){
+        //serverList(udp_s);
+      }
+      else if(strcmp("DLT",buf)==0){
+        //serverDelete(udp_s);
+      }
+      else if(strcmp("RDB",buf)==0){
+        //serverMKD(ntcp_s);
+      }
+      else if(strcmp("EDT",buf)==0){
+        //serverRMD(udp_s);
+      }
+      else if(strcmp("APN",buf)==0){
+        //serverCHD(ntcp_s);
+      }
+      else if(strcmp("DWN",buf)==0){
+        //serverCHD(ntcp_s);
+      }
+      else if(strcmp("DST",buf)==0){
+        //serverCHD(udp_s);
+      }
+      else if(strcmp("XIT",buf)==0){
+        strcpy(message,"Not currently functional");
+      }
+      else if(strcmp("SHT",buf)==0){
+        strcpy(message,"Not currently functional");
+      }
+      else{
+        strcpy(message,"Send a correct command\n");
+      }
+      printf("TCP Server Received:%s\n",buf);
+      tcpStrSend(ntcp_s,message,"myfrmd"); 
+    }
+    printf("Client Quit!\n");
+    close(ntcp_s);
+  }
   
-  close(s);
+  close(udp_s);
+  close(tcp_s);
 }
