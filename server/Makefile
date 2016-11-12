@@ -4,8 +4,8 @@
 #  Makefile 
 #  Makefile for our server code.
 
-myfrmd: myfrmd.c common.o
-	g++ -Wall myfrmd.c common.o -o myfrmd -lmhash
+myfrmd: myfrmd.cpp common.o
+	g++ -Wall myfrmd.cpp common.o -o myfrmd -lmhash
 
 common.o: ../common.cpp ../common.hpp
 	g++ -c ../common.cpp ../common.hpp -Wall -lmhash
