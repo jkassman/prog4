@@ -17,14 +17,16 @@
 
 using namespace std;
 
-string serverCreate(int sock, string currentUser, vector<board> & boardVec){
+string serverCreate(int sock, string currentUser, vector<board> & boardVec, sockaddr_in & sin){
   struct sockaddr_in client_addr;
   socklen_t addr_len;
   char boardName[1000];
   addr_len = sizeof(client_addr);
 
+  udpStrSend(sock, "Please enter a name for the new board:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+
   udpRecv(sock,boardName,1000,&client_addr,&addr_len,"myfrmd");
-  printf("Board Name is:%s",boardName);
+  printf("Board Name is:%s\n",boardName);
 
   //loop through boardVec to make sure boardName is unique
   vector<board>::iterator it;
@@ -49,9 +51,9 @@ string serverCreate(int sock, string currentUser, vector<board> & boardVec){
 }
 
 int main(int argc, char * argv[]){
-  struct sockaddr_in sin, client_addr;
+  struct sockaddr_in sin;
   string message;
-  socklen_t len, addr_len;
+  socklen_t len;
   int tcp_s, udp_s, ntcp_s, port, bytesRec;
   vector<board> boardVec;
 
@@ -125,8 +127,6 @@ int main(int argc, char * argv[]){
           perror("myfrmd:accept");
           exit(1);
       }
-
-      addr_len = sizeof(client_addr);
 
       //Make the user, password map:
       struct sockaddr_in sine;
@@ -211,7 +211,7 @@ int main(int argc, char * argv[]){
                               "Could not receive client opcode");
           if(bytesRec==0) break; //client ^C
           if(strcmp("CRT",buffy)==0){
-              message = serverCreate(udp_s, username, boardVec);
+              message = serverCreate(udp_s, username, boardVec, sin);
           }
           else if(strcmp("LIS",buffy)==0){
               //serverUpload(udp_s);
