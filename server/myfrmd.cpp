@@ -26,7 +26,6 @@ string serverCreate(int sock, string currentUser, vector<board> & boardVec, sock
   udpStrSend(sock, "Please enter a name for the new board:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
   udpRecv(sock,boardName,1000,&client_addr,&addr_len,"myfrmd");
-  printf("Board Name is:%s\n",boardName);
 
   //loop through boardVec to make sure boardName is unique
   vector<board>::iterator it;
@@ -62,8 +61,22 @@ string serverEdit(){
     return "";
 }
 
-string serverList(){
-    return "";
+string serverList(int sock, vector<board> & boardVec,sockaddr_in & sin){
+  vector<board>::iterator it;
+  string listString = "";
+  //loop through the boardVec to get all of the board names
+  for (it = boardVec.begin(); it != boardVec.end(); ++it)
+  {
+    if(!it->name.empty()){
+      listString = listString + it->name + "\n";
+    }
+  }
+  if (listString.empty()){
+    return "There are currently no boards.\n";
+  }
+  else{
+    return listString;
+  }
 }
 
 string serverRead(){
@@ -78,23 +91,68 @@ string serverDownload(){
     return "";
 }
 
-string serverDestroy(){
-    return "";
+string serverDestroy(int sock, string currentUser, vector<board> & boardVec, sockaddr_in & sin){
+  struct sockaddr_in client_addr;
+  socklen_t addr_len;
+  char boardName[1000];
+  addr_len = sizeof(client_addr);
+
+  udpStrSend(sock, "Please enter the name of the board to delete:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+
+  udpRecv(sock,boardName,1000,&client_addr,&addr_len,"myfrmd");
+
+  //loop through boardVec to find the board to destroy
+  vector<board>::iterator it;
+  bool nameExists = false;
+  for (it = boardVec.begin(); it != boardVec.end(); ++it)
+  {
+      if (boardName == it->name)
+      { //the board exists, so destroy it if the current user is the creator
+          if (currentUser == it->creator){
+            nameExists = true;
+            boardVec.erase(it);
+	    it--;
+          }
+      }
+  }
+  if (nameExists)
+  {
+      return "Board successfully destroyed\n";
+  }
+  else
+  {
+      return "Error:Board cannot be destroyed. The board either does not exist, or you do not have permission to destroy it\n";
+  }
 }
 
-string serverShutdown(){
-    return "";
+string serverShutdown(int sock, vector<board> & boardVec, sockaddr_in & sin, string adminPass){
+  struct sockaddr_in client_addr;
+  socklen_t addr_len;
+  char clientPass[1000];
+  addr_len = sizeof(client_addr);
+
+  udpStrSend(sock, "Please enter the Admin Password. WARNING: The server will be shut down and all boards destroyed:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+
+  udpRecv(sock,clientPass,1000,&client_addr,&addr_len,"myfrmd");
+
+  if(clientPass == adminPass){
+    boardVec.clear();
+    return "If this was implemented, you could shut down the server! For now, this just destroyed all boards\n";
+  }
+  else{
+    return "Incorrect Password, you do not have permission to shut down the server\n";
+  }
 }
 
 int main(int argc, char * argv[]){
   struct sockaddr_in sin;
-  string message;
+  string message, adminPass;
   socklen_t len;
   int tcp_s, udp_s, ntcp_s, port, bytesRec;
   vector<board> boardVec;
 
   //check for correct number of arguments and assign arguments to variables
-  if (argc==2){
+  if (argc==3){
       int convertStatus = stringToInt(&port, argv[1], 0, INT_MAX);
       switch (convertStatus) {
       case 1:
@@ -111,9 +169,10 @@ int main(int argc, char * argv[]){
           //Do nothing, successfully parsed the port
           break;
       }
+      adminPass = argv[2];
   }
   else{
-    fprintf(stderr, "usage: myftpd [Port]\n");
+    fprintf(stderr, "usage: myftpd [Port] [Admin Password]\n");
     exit(1);
   }
 
@@ -259,7 +318,7 @@ int main(int argc, char * argv[]){
               //serverEdit(udp_s);
           }
           else if(strcmp("LIS",buffy)==0){
-              //serverList(ntcp_s);
+              message = serverList(udp_s, boardVec, sin);
           }
           else if(strcmp("RDB",buffy)==0){
               //serverRead(udp_s);
@@ -271,7 +330,7 @@ int main(int argc, char * argv[]){
               //serverDownload(ntcp_s);
           }
           else if(strcmp("DST",buffy)==0){
-              //serverDestroy(udp_s);
+              message = serverDestroy(udp_s, username, boardVec, sin);
           }
           else if(strcmp("XIT",buffy)==0){
               udpStrSend(udp_s, "XIT", &sin, sizeof(struct sockaddr), 
@@ -279,7 +338,7 @@ int main(int argc, char * argv[]){
               break; //exit inner while loop
           }
           else if(strcmp("SHT",buffy)==0){
-              //serverShutdown(udp_s);
+              message = serverShutdown(udp_s, boardVec, sin, adminPass);
           }
           else{
               //strcpy(message,"Send a correct command\n");
