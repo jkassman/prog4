@@ -165,17 +165,20 @@ int main(int argc, char * argv[]){
           //Checks to see if there is a new user or see if the password matches:
           if (exists) {
               if(password == users[username]) {
-                  messageSend = "The passwords matched! You have successfully logged in.";
+                  messageSend = "The passwords matched! You have successfully logged in.\n";
                   wrongPass = false;
               }else{
                   messageSend = "The entered password was incorrect. Please try again: ";
               }
           }else{
               users[username] = password;
-              messageSend = "Account setup has been completed. Welcome to 12st Century Forums!";
+              messageSend = "Account setup has been completed. Welcome to 12st Century Forums!\n";
               wrongPass = false;
           }
-          messageSend += "Please enter one of these codes:\nCRT: Create Board, LIS: List Boards, MSG: Leave Message, DLT: Delete Message, RDB: Read Board, EDT: Edit Message, APN: Append File, DWN: Download File, DST: Destroy Board, XIT: Exit, SHT: Shutdown Server\n";
+          if (!wrongPass)
+          {
+              messageSend += "Please enter one of these codes:\nCRT: Create Board, LIS: List Boards, MSG: Leave Message, DLT: Delete Message, RDB: Read Board, EDT: Edit Message, APN: Append File, DWN: Download File, DST: Destroy Board, XIT: Exit, SHT: Shutdown Server\n";
+          }
           //Sends acknowledgment to the client:
           udpStrSend(udp_s, messageSend.c_str(), &sin, sizeof(struct sockaddr), 
                      "Could not send log in acknowledgement.");
