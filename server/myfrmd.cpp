@@ -17,14 +17,16 @@
 
 using namespace std;
 
-string serverCreate(int sock, string currentUser, vector<board> & boardVec){
+string serverCreate(int sock, string currentUser, vector<board> & boardVec, sockaddr_in & sin){
   struct sockaddr_in client_addr;
   socklen_t addr_len;
   char boardName[1000];
   addr_len = sizeof(client_addr);
 
+  udpStrSend(sock, "Please enter a name for the new board:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+
   udpRecv(sock,boardName,1000,&client_addr,&addr_len,"myfrmd");
-  printf("Board Name is:%s",boardName);
+  printf("Board Name is:%s\n",boardName);
 
   //loop through boardVec to make sure boardName is unique
   vector<board>::iterator it;
@@ -48,10 +50,46 @@ string serverCreate(int sock, string currentUser, vector<board> & boardVec){
   }
 }
 
+string serverMessage(){
+
+}
+
+string serverDelete(){
+
+}
+
+string serverEdit(){
+
+}
+
+string serverList(){
+
+}
+
+string serverRead(){
+
+}
+
+string serverAppend(){
+
+}
+
+string serverDownload(){
+
+}
+
+string serverDestroy(){
+
+}
+
+string serverShutdown(){
+
+}
+
 int main(int argc, char * argv[]){
-  struct sockaddr_in sin, client_addr;
+  struct sockaddr_in sin;
   string message;
-  socklen_t len, addr_len;
+  socklen_t len;
   int tcp_s, udp_s, ntcp_s, port, bytesRec;
   vector<board> boardVec;
 
@@ -125,8 +163,6 @@ int main(int argc, char * argv[]){
           perror("myfrmd:accept");
           exit(1);
       }
-
-      addr_len = sizeof(client_addr);
 
       //Make the user, password map:
       struct sockaddr_in sine;
@@ -211,31 +247,31 @@ int main(int argc, char * argv[]){
                               "Could not receive client opcode");
           if(bytesRec==0) break; //client ^C
           if(strcmp("CRT",buffy)==0){
-              message = serverCreate(udp_s, username, boardVec);
-          }
-          else if(strcmp("LIS",buffy)==0){
-              //serverUpload(udp_s);
+              message = serverCreate(udp_s, username, boardVec, sin);
           }
           else if(strcmp("MSG",buffy)==0){
-              //serverList(udp_s);
+              //serverMessage(udp_s);
           }
           else if(strcmp("DLT",buffy)==0){
               //serverDelete(udp_s);
           }
-          else if(strcmp("RDB",buffy)==0){
-              //serverMKD(ntcp_s);
-          }
           else if(strcmp("EDT",buffy)==0){
-              //serverRMD(udp_s);
+              //serverEdit(udp_s);
+          }
+          else if(strcmp("LIS",buffy)==0){
+              //serverList(ntcp_s);
+          }
+          else if(strcmp("RDB",buffy)==0){
+              //serverRead(udp_s);
           }
           else if(strcmp("APN",buffy)==0){
-              //serverCHD(ntcp_s);
+              //serverAppend(ntcp_s);
           }
           else if(strcmp("DWN",buffy)==0){
-              //serverCHD(ntcp_s);
+              //serverDownload(ntcp_s);
           }
           else if(strcmp("DST",buffy)==0){
-              //serverCHD(udp_s);
+              //serverDestroy(udp_s);
           }
           else if(strcmp("XIT",buffy)==0){
               udpStrSend(udp_s, "XIT", &sin, sizeof(struct sockaddr), 
@@ -243,7 +279,7 @@ int main(int argc, char * argv[]){
               break; //exit inner while loop
           }
           else if(strcmp("SHT",buffy)==0){
-              //strcpy(message,"Not currently functional");
+              //serverShutdown(udp_s);
           }
           else{
               //strcpy(message,"Send a correct command\n");
