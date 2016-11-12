@@ -22,7 +22,7 @@ void serverCreate(int sock, string currentUser){
 
   //loop through boardVec to make sure boardName is unique
 
-  board b1(currentUser,boardName);
+  //board b1(currentUser,boardName);
   //push to a vector of boards
 }
 
@@ -73,13 +73,8 @@ int main(int argc, char * argv[]){
     perror("myftpd: bind");
     exit(1);
   }
-  //listen to the socket
-  if((listen(tcp_s,0))<0){
-    perror("myftpd:listen");
-    exit(1);
-  }
 
-  //setup passive open
+ //setup passive open
   if((udp_s = socket(PF_INET,SOCK_DGRAM,0)) < 0){
     perror("simplex-talk:socket");
     exit(1);
@@ -90,6 +85,18 @@ int main(int argc, char * argv[]){
     perror("simplex-talk:bind");
     exit(1);
   }
+
+  while (1)
+  {
+      //setup TCP and UDP client
+
+      //listen to the socket
+      if((listen(tcp_s,0))<0){
+          perror("myftpd:listen");
+          exit(1);
+      }
+
+      
 
   addr_len = sizeof(client_addr);
 
