@@ -92,38 +92,6 @@ int main(int argc, char **argv)
 
     //setup complete, now we're ready to do stuff!
 
-   //Receives request from the server to send username:
-   char buffy[1001];
-   struct sockaddr_in sinebard;
-   socklen_t sinebardlen = sizeof(sinebard);
-   string username, password;
-
-   udpRecv(udpSock, buffy, 1000, &sinebard, &sinebardlen, "error receiving server request for username");
-
-   //Client sends the username:
-   cout << buffy << endl;
-   cin >> username;
-  // int len = strlen(username.c_str())+1;
-   udpStrSend(udpSock, username.c_str(), &sinbad, sizeof(struct sockaddr), "Could not send username");
-
-   //Receives request from the server to send the password:
-   udpRecv(udpSock, buffy, 1000, &sinebard, &sinebardlen, "Could not receive server request for password.");
-
-   //Client sends the password:
-   cout << buffy << endl;
-   cin >> password;
-   //int len2 = strlen(password.c_str())+1;
-   udpStrSend(udpSock, password.c_str(), &sinbad, sizeof(struct sockaddr), "Could not send password");
-
-    //Ack that the user is now logged in:
-    udpRecv(udpSock, buffy, 1000, &sinebard, &sinebardlen, "Did not receive password information");
-    if(strcmp(buffy, "The entered password was incorrect.") != 0) {
-      cout << buffy << endl;
-      exit(1);
-    }else{
-      cout << buffy << endl;
-    }
-
     //Prompt user for operation state:
     /* Main while loop: 
        0) interpret server's prompt
@@ -137,10 +105,10 @@ int main(int argc, char **argv)
         //Receive Prompt from server:
         struct sockaddr_in sinebard;
         socklen_t sinebardlen = sizeof(sinebard);
-        //cout << "Listening for server message" << endl;
+        cout << "Listening for server message" << endl;
         udpRecv(udpSock, buffy, PROG4_BUFF_SIZE, &sinebard, &sinebardlen, 
                 "error receiving server prompt message");
-        //cout << "Received Server Message" << endl;
+        cout << "Received Server Message" << endl;
         //interpret what the server said
         if (!strcmp(buffy, "XIT"))
         {
@@ -148,7 +116,7 @@ int main(int argc, char **argv)
         }
 
         //print out the server's prompt
-        cout << buffy << endl;
+        cout << buffy;
 
         //get input from the user and send it to the server:
         string userMsg;
@@ -157,25 +125,6 @@ int main(int argc, char **argv)
                    "Could not send user message");
     }
 
-/*
-    //THE FOLLOWING IS 100% DEBUGGING
-    //debug messages to make sure the connection is working!
-    tcpStrSend(tcpSock, "This is a TCP test. Also, the Soviets have invaded.\n", "Could not send TCP test");
-    tcpRecv(tcpSock, buffy, 1000, "error receiving TCP test message");
-    cout << "TCP Received: " << buffy << endl;
-    close(tcpSock);
-
-    socklen_t test = sizeof(struct sockaddr);
-
-    udpStrSend(udpSock, "This is a UDP test. All systems normal.\n", &sinbad,
-              test, "error sending UDP test");
-
-    struct sockaddr_in serverbad;
-    socklen_t serverlen = sizeof(struct sockaddr);
-    udpRecv(udpSock, buffy, 1000, &serverbad, &serverlen, "error receiving UDP test");
-    
-    cout << "UDP Received: " << buffy << endl;
-*/
     close(udpSock);
     close(tcpSock);
     exit(0);
