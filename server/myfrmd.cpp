@@ -688,8 +688,7 @@ int main(int argc, char * argv[]){
               message = serverRead(udp_s, ntcp_s, sin, boardVec);
           }
           else if(strcmp("APN",buffy)==0){
-              //serverAppend(ntcp_s);
-              message = "Not yet implemented\n";
+              serverAppend(udp_s, ntcp_s, boardVec, sin);
           }
           else if(strcmp("DWN",buffy)==0){
               message = serverDownload(udp_s, ntcp_s, boardVec, sin);
