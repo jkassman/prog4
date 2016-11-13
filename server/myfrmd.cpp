@@ -62,12 +62,101 @@ string serverCreate(int sock, string currentUser, vector<board> & boardVec, sock
   }
 }
 
-string serverMessage(){
-    return "";
+string serverMessage(int udp_s, vector<board> &boardVec, string currentUser, sockaddr_in &sin, sockaddr_in &sine){
+    //Needed variables:
+    string message, boardName, userMessage; 
+    char buffy[1001];
+    bool nameExists = false;
+    socklen_t sinelen = sizeof(sine);
+    vector<board>::iterator it;
+    vector<board>::iterator it2;
+
+    //Prompt user for the name of the board:
+    message = "Which board would you like to post to? ";
+    udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), "Could not send board name request");
+
+    //User sends the name of the board over:
+    udpRecv(udp_s, buffy, 1000, &sine, &sinelen, "Did not receive board name");
+    boardName = buffy;
+
+    //Prompt user for the message that they would like to send over:
+    message = "What message would you like to post on this board? ";
+    udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), "Could not send message request");
+
+    //Receive message to be posted:
+    udpRecv(udp_s, buffy, PROG4_BUFF_SIZE, &sine, &sinelen, "Did not receive user message");
+    userMessage = buffy;
+
+    //Check to see if the board exists with the given name:
+    for (it = boardVec.begin(); it != boardVec.end(); ++it) {
+      if (boardName == it->name) { //exists, so don't create
+          nameExists = true;
+      }
+    }
+  
+    //If exists, then append the username and message to the end of the file representing the board:
+    if (nameExists) {
+     struct message newMess; 
+     newMess.user = currentUser;
+     newMess.text = userMessage;
+     for(it2 = boardVec.begin(); it2 != boardVec.end(); ++it2) {
+       if(boardName == it2->name) {
+         (it2->messageVec).push_back(newMess);
+       }
+     }
+     message = "The message was posted successfully.";   
+     
+    //Else, do not post message:
+   }else{
+     message = "This board does not exist."; 
+   }
+
+    //Send results back to the client:
+    //udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), "Could not send message final results");
+    return message;
 }
 
-string serverDelete(){
+string serverDelete(int udp_s, vector<board> &boardVec, string currentUser, sockaddr_in &sin, sockaddr_in &sine){
+    /*string message, boardName, userMessage; 
+    char buffy[1001];
+    bool nameExists = false;
+    socklen_t sinelen = sizeof(sine);
+    int messNum;
+    vector<board>::iterator it;
+    
+    //Prompts user for the name of the board that they would like to delete the message from:
+    message = "Which board would you like to delete a message from? ";
+    udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), "Could not send board name request");
+
+    //Receives the board name from the user:
+    udpRecv(udp_s, buffy, PROG4_BUFF_SIZE, &sine, &sinelen, "Did not receive board name from user");
+    boardName = buffy;
+
+    //Asks the user what number that message is on the board:
+    message = "What is the number of the message that you would like to delete on this board? ";
+    udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), "Could not send message number request"); 
+
+    //Receives the message ID number from the user:
+    udpRecv(udp_s, buffy, PROG4_BUFF_SIZE, &sine, &sinelen, "Did not receive message number from the user");
+    messNum = atoi(buffy);
+
+    //Checks to see if the board exists:
+    for (it = boardVec.begin(); it != boardVec.end(); ++it) {
+      if (boardName == it->name) { //board exists
+          nameExists = true;
+          if((it->messageVec).size() >= numMess) { //message exists
+          }else{ //message does not exist 
+          }    
+      } else {
+    }
+        
+
+          //Then checks to see whether it is the same user who wants to delete the message is the same user that posted it:
+    //Sends the results to the client depending on 
+
+     */
     return "";
+
 }
 
 string serverEdit(){
@@ -392,10 +481,10 @@ int main(int argc, char * argv[]){
               message = serverCreate(udp_s, username, boardVec, sin);
           }
           else if(strcmp("MSG",buffy)==0){
-              //serverMessage(udp_s);
+              message = serverMessage(udp_s, boardVec, username, sin, sine);
           }
           else if(strcmp("DLT",buffy)==0){
-              //serverDelete(udp_s);
+              message = serverDelete(udp_s,boardVec, username, sin, sine);
           }
           else if(strcmp("EDT",buffy)==0){
               //serverEdit(udp_s);
