@@ -289,9 +289,9 @@ string serverRead(int udpSock, int tcpSock, struct sockaddr_in & sin,
     int i = 0;
     for (msgIt = it->messageVec.begin(); msgIt != it->messageVec.end(); ++msgIt)
     {
+        i++;
         fprintf(boardF, "Message %d. %s: %s\n", i, 
                 msgIt->user.c_str(), msgIt->text.c_str());
-        i++;
     }
     
     //send the filesize
