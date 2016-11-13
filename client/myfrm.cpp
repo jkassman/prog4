@@ -12,6 +12,36 @@
 
 using namespace std;
 
+void clientRead(int tcpSock)
+{
+    //receive the file size
+    int recvFileSize;
+    int fileSize;
+    tcpRecv(tcpSock, &recvFileSize, 4, "Could not receive RDB filesize");
+    fileSize = ntohl(recvFileSize);
+    
+    //receive board name
+    char boardName[PROG4_BUFF_SIZE];
+    tcpRecv(tcpSock, &boardName, PROG4_BUFF_SIZE, "RDB: Could not receive board name");
+    
+    //receive the file
+    FILE* boardF = fopen(boardName, "rw");
+    recvFile(tcpSock, boardF, fileSize, "myfrm RDB");
+
+    
+    //print the file to the screen
+    fflush(boardF);
+    int bytesPrinted = 0;
+    while (bytesPrinted < fileSize)
+    {
+        printf("%c", fgetc(boardF));
+        bytesPrinted++;
+    }
+    fclose(boardF);
+
+    remove(boardName);
+}
+
 int main(int argc, char **argv)
 {
     //Argument handling
@@ -113,6 +143,10 @@ int main(int argc, char **argv)
         if (!strcmp(buffy, "XIT"))
         {
             break;
+        }
+        else if (!strcmp(buffy, "RDB"))
+        {
+            clientRead(tcpSock);
         }
 
         //print out the server's prompt

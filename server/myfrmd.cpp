@@ -17,6 +17,19 @@
 
 using namespace std;
 
+bool doesBoardExist(string boardName, vector<board> & boardVec)
+{
+    vector<board>::iterator it;
+    for (it = boardVec.begin(); it != boardVec.end(); ++it)
+    {
+        if (boardName == it->name)
+        { 
+            return true;
+        }
+    }
+    return true;
+}
+
 string serverCreate(int sock, string currentUser, vector<board> & boardVec, sockaddr_in & sin){
   struct sockaddr_in client_addr;
   socklen_t addr_len;
@@ -66,7 +79,77 @@ string serverList(){
     return "";
 }
 
-string serverRead(){
+string serverRead(int udpSock, int tcpSock, struct sockaddr_in & sin,
+                  vector<board> boardVec){
+    //send prompt
+    udpStrSend(udpSock, "Which board do you want to read?", 
+               &sin, sizeof(struct sockaddr), "Could not send RDB prompt");
+    //get response
+    struct sockaddr_in client_addr;
+    socklen_t addr_len = sizeof(client_addr);
+    char buffy[PROG4_BUFF_SIZE];
+    udpRecv(udpSock, buffy, PROG4_BUFF_SIZE, &client_addr, &addr_len, 
+            "Could not receive RDB board name");
+
+    //signal that the client needs to read a board
+    udpStrSend(udpSock, "RDB", &sin, sizeof(struct sockaddr), 
+               "Could not send RDB signal");
+    
+    //process file
+    string boardName = buffy;
+    int fileSize;
+    int fileSizeToSend;
+    vector<board>::iterator it;
+    bool nameExists = false;
+    for (it = boardVec.begin(); it != boardVec.end(); ++it)
+    {
+        if (boardName == it->name)
+        { 
+            nameExists = true;
+            break;
+        }
+    }
+    if (!nameExists)
+    {
+        //send a negative file size
+        fileSize = -1;
+        fileSizeToSend = htonl(fileSize);
+        tcpSend(tcpSock, &fileSizeToSend, 4, 
+                "Could not send negative file size");
+        return "";
+    }
+    //create a file from the board, C style
+    FILE* boardF = fopen(boardName.c_str(), "w");
+    if (!boardF) 
+    {
+        cout << stderr << "Error: Could not open file named " << boardName 
+             << endl;
+        exit(1);
+    }
+    fprintf(boardF, "Creator: %s\n\n", it->creator.c_str());
+    vector<message>::iterator msgIt;
+    int i = 0;
+    for (msgIt = it->messageVec.begin(); msgIt != it->messageVec.end(); ++msgIt)
+    {
+        fprintf(boardF, "Message %d. %s: %s\n", i, 
+                msgIt->user.c_str(), msgIt->text.c_str());
+        i++;
+    }
+    
+    //send the filesize
+    fflush(boardF);
+    fileSize = getFileSize(boardF);
+    fileSizeToSend = htonl(fileSize);
+    tcpSend(tcpSock, &fileSizeToSend, 4, "Could not send file size");
+
+    //send the filename
+    tcpStrSend(tcpSock, boardName.c_str(), "RDB: Could not send filename");
+    sendFile(tcpSock, boardF, fileSize, "myfrmd");
+
+    //delete the file
+    fclose(boardF);
+    remove(boardName.c_str());
+    
     return "";
 }
 
