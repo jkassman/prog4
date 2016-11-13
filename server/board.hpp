@@ -22,6 +22,7 @@ struct message{
 class board{
   public:
     vector<message> messageVec;
+    vector<string> fileVec;
     string name;
     string creator;
 
