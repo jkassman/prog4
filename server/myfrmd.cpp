@@ -11,6 +11,7 @@
 #include <map>
 #include <iostream>
 #include <vector>
+#include <fcntl.h>
 
 #include "../common.hpp"
 #include "board.hpp"
@@ -184,7 +185,7 @@ string serverList(int sock, vector<board> & boardVec,sockaddr_in & sin){
 string serverRead(int udpSock, int tcpSock, struct sockaddr_in & sin,
                   vector<board> boardVec){
     //send prompt
-    udpStrSend(udpSock, "Which board do you want to read?", 
+    udpStrSend(udpSock, "Which board do you want to read? ", 
                &sin, sizeof(struct sockaddr), "Could not send RDB prompt");
     //get response
     struct sockaddr_in client_addr;
@@ -213,21 +214,25 @@ string serverRead(int udpSock, int tcpSock, struct sockaddr_in & sin,
     }
     if (!nameExists)
     {
+        cout << boardName << "Does not exist" << endl;
         //send a negative file size
         fileSize = -1;
         fileSizeToSend = htonl(fileSize);
         tcpSend(tcpSock, &fileSizeToSend, 4, 
                 "Could not send negative file size");
+        cout << "ERERE" << endl;
         return "";
     }
+    cout << boardName << "totally exists" << endl;
     //create a file from the board, C style
-    FILE* boardF = fopen(boardName.c_str(), "w");
-    if (!boardF) 
+    int boardFd = open(boardName.c_str(), O_CREAT | O_EXCL | O_WRONLY, 0644);
+    FILE* boardF = fdopen(boardFd, "w");
+    if (!boardF)
     {
-        cout << stderr << "Error: Could not open file named " << boardName 
-             << endl;
+        cerr << "Error: RDB: Could not open file named " << boardName << endl;
         exit(1);
     }
+
     fprintf(boardF, "Creator: %s\n\n", it->creator.c_str());
     vector<message>::iterator msgIt;
     int i = 0;
@@ -239,14 +244,18 @@ string serverRead(int udpSock, int tcpSock, struct sockaddr_in & sin,
     }
     
     //send the filesize
-    fflush(boardF);
+    fclose(boardF);
+    boardF = fopen(boardName.c_str(), "r");
+    
     fileSize = getFileSize(boardF);
     fileSizeToSend = htonl(fileSize);
     tcpSend(tcpSock, &fileSizeToSend, 4, "Could not send file size");
 
     //send the filename
-    tcpStrSend(tcpSock, boardName.c_str(), "RDB: Could not send filename");
-    sendFile(tcpSock, boardF, fileSize, "myfrmd");
+    udpStrSend(udpSock, boardName.c_str(), &sin, sizeof(struct sockaddr),
+               "RDB: Could not send filename");
+    cout << "The size of the file to send is " << fileSize;
+    sendFile(tcpSock, boardF, fileSize, "myfrmd: RDB");
 
     //delete the file
     fclose(boardF);
@@ -411,6 +420,9 @@ int main(int argc, char * argv[]){
       cout << buffy << endl;
       
       /* At this point, the client is connected with TCP and UDP. */
+      
+      //DEBUG
+      //tcpStrSend(ntcp_s, "Testing, please", "ERROR DAMMIT");
 
       /* Now we ask the client to log in: */
 
@@ -493,13 +505,15 @@ int main(int argc, char * argv[]){
               message = serverList(udp_s, boardVec, sin);
           }
           else if(strcmp("RDB",buffy)==0){
-              //serverRead(udp_s);
+              message = serverRead(udp_s, ntcp_s, sin, boardVec);
           }
           else if(strcmp("APN",buffy)==0){
               //serverAppend(ntcp_s);
+              message = "Not yet implemented\n";
           }
           else if(strcmp("DWN",buffy)==0){
               //serverDownload(ntcp_s);
+              message = "Not yet implemented\n";
           }
           else if(strcmp("DST",buffy)==0){
               message = serverDestroy(udp_s, username, boardVec, sin);
@@ -513,7 +527,7 @@ int main(int argc, char * argv[]){
               message = serverShutdown(udp_s, boardVec, sin, adminPass);
           }
           else{
-              //strcpy(message,"Send a correct command\n");
+              message = "Invalid command entered.\n";
           }
           printf("Received:%s\n",buffy);
           message += operationsMessage;

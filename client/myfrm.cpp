@@ -7,34 +7,56 @@
  */
 
 #include <iostream>
+#include <fcntl.h>
 
 #include "../common.hpp"
 
 using namespace std;
 
-void clientRead(int tcpSock)
+void clientRead(int tcpSock, int udpSock)
 {
+    struct sockaddr_in serverAddr;
+    socklen_t serverAddr_len = sizeof(serverAddr);
     //receive the file size
     int recvFileSize;
     int fileSize;
     tcpRecv(tcpSock, &recvFileSize, 4, "Could not receive RDB filesize");
     fileSize = ntohl(recvFileSize);
-    
+    if (fileSize < 0)
+    {
+        cout << "The requested board does not exist" << endl;
+        return;
+    }
     //receive board name
     char boardName[PROG4_BUFF_SIZE];
-    tcpRecv(tcpSock, &boardName, PROG4_BUFF_SIZE, "RDB: Could not receive board name");
+    udpRecv(udpSock, &boardName, PROG4_BUFF_SIZE, &serverAddr, &serverAddr_len, 
+            "RDB: Could not receive board name");
+    cout << "Received Board Name " << boardName << ". Its size is " << fileSize << endl;
     
     //receive the file
-    FILE* boardF = fopen(boardName, "rw");
-    recvFile(tcpSock, boardF, fileSize, "myfrm RDB");
 
+    int boardFd = open(boardName, O_CREAT | O_EXCL | O_WRONLY, 0644);
+    FILE* boardF = fdopen(boardFd, "w");
+    if (!boardF)
+    {
+        cerr << "RDB: Could not open file named " << boardName << endl;
+        return;
+    }
+    recvFile(tcpSock, boardF, fileSize, "myfrm RDB");
+    cout << "received the file" << endl;
     
     //print the file to the screen
-    fflush(boardF);
+    fclose(boardF);
+    boardF = fopen(boardName, "r");
+    if (!boardF)
+    {
+        cerr << "RDB: Could not re-open file named " << boardName << endl;
+        return;
+    }
     int bytesPrinted = 0;
     while (bytesPrinted < fileSize)
     {
-        printf("%c", fgetc(boardF));
+        printf("%c", (char) fgetc(boardF));
         bytesPrinted++;
     }
     fclose(boardF);
@@ -108,6 +130,11 @@ int main(int argc, char **argv)
         close(tcpSock);
         exit(2);
     }
+    
+    //DEBUG
+    //char buffy2[PROG4_BUFF_SIZE];
+    //tcpRecv(tcpSock, buffy2, PROG4_BUFF_SIZE, "BADNESS");
+    //cout << "Jacob's Dumb Test" << buffy2 << endl;
 
     int udpSock = socket(PF_INET, SOCK_DGRAM, 0);
     if (udpSock < 0)
@@ -146,7 +173,8 @@ int main(int argc, char **argv)
         }
         else if (!strcmp(buffy, "RDB"))
         {
-            clientRead(tcpSock);
+            clientRead(tcpSock, udpSock);
+            continue;
         }
 
         //print out the server's prompt
