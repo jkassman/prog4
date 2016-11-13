@@ -263,9 +263,11 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
   struct sockaddr_in client_addr;
   socklen_t addr_len;
   char boardName[1000];
-  char fileName[1000];
+  char buffy[1000];
+  string fileName;
   addr_len = sizeof(client_addr);
   vector<board>::iterator it;
+  vector<file>::iterator fileIt;
   bool nameExists = false;
   bool fileExists = false;
 
@@ -275,7 +277,8 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
 
   udpStrSend(udp_s, "Please enter the name of the file to download:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
-  udpRecv(udp_s,fileName,1000,&client_addr,&addr_len,"myfrmd");
+  udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
+  fileName = buffy;
 
   //loop through boardVec to make sure board exists
   for (it = boardVec.begin(); it != boardVec.end(); ++it){
@@ -285,21 +288,28 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
     }
   }
 
+  cout << "nameExists: " << nameExists << endl;
+
   //loop through the board's appended files to make sure file exists
-  for (fileIt = it->fileVec.begin(); fileIt != it->fileVec.end(); ++fileIt){
-    if (fileIt == fileName){
-      fileExists = true;
+  if (nameExists){
+    for (fileIt = it->fileVec.begin(); fileIt != it->fileVec.end(); ++fileIt){
+      if (fileIt->name == fileName){
+        fileExists = true;
+        break;
+      }
     }
   }
 
+  cout << "fileExists: " << fileExists << endl;
+
   if(!nameExists){
     //send negative filesize
-    return "Board does not exist. Cannot download file.";
+    return "Board does not exist. Cannot download file.\n";
   }
   else{
     if(!fileExists){
       //send negative filesize
-      return "Board exists, but the file you are asking for is not appended to the board.";
+      return "Board exists, but the file you are asking for is not appended to the board.\n";
     }
     else{
       //send positive filesize
@@ -307,7 +317,7 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
     }
   }
   
-  return "File successfully downloaded";
+  return "File successfully downloaded\n";
 }
 
 string serverDestroy(int sock, string currentUser, vector<board> & boardVec, sockaddr_in & sin){
@@ -546,7 +556,7 @@ int main(int argc, char * argv[]){
               //serverAppend(ntcp_s);
           }
           else if(strcmp("DWN",buffy)==0){
-              //serverDownload(ntcp_s);
+              message = serverDownload(udp_s, ntcp_s, boardVec, sin);
           }
           else if(strcmp("DST",buffy)==0){
               message = serverDestroy(udp_s, username, boardVec, sin);
