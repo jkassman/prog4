@@ -145,7 +145,7 @@ string serverDelete(int udp_s, vector<board> &boardVec, string currentUser, sock
       if (boardName == it->name) { //board exists
           if((it->messageVec).size() >= (unsigned int)messNum) { //message exists
             if((it->messageVec).at(messNum).user == currentUser){  //username matches - then delete
-              (it->messageVec).erase((it->messageVec).begin()+(messNum+1)); //Should erase it? Seems really odd...
+              (it->messageVec).erase((it->messageVec).begin()+(messNum));
               message = "The message was successfully deleted.\n";
  	    }else{ //username does not match
               message = "Error: Cannot delete a post that you did not post yourself.\n";
