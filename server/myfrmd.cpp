@@ -89,12 +89,12 @@ string serverMessage(int udp_s, vector<board> &boardVec, string currentUser, soc
 
     //Check to see if the board exists with the given name:
     for (it = boardVec.begin(); it != boardVec.end(); ++it) {
-      if (boardName == it->name) { //exists, so don't create
+      if (boardName == it->name) { //exists, so can write a message on it
           nameExists = true;
       }
     }
   
-    //If exists, then append the username and message to the end of the file representing the board:
+    //If exists, then add the username and message to the end of the board:
     if (nameExists) {
      struct message newMess; 
      newMess.user = currentUser;
