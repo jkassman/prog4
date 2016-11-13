@@ -154,7 +154,7 @@ int main(int argc, char **argv)
 
         //get input from the user and send it to the server:
         string userMsg;
-        cin >> userMsg;
+        getline(cin, userMsg);
         udpStrSend(udpSock, userMsg.c_str(), &sinbad, sizeof(struct sockaddr), 
                    "Could not send user message");
     }
