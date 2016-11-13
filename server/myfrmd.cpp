@@ -117,9 +117,8 @@ string serverMessage(int udp_s, vector<board> &boardVec, string currentUser, soc
 }
 
 string serverDelete(int udp_s, vector<board> &boardVec, string currentUser, sockaddr_in &sin, sockaddr_in &sine){
-    /*string message, boardName, userMessage; 
+    string message, boardName, userMessage; 
     char buffy[1001];
-    bool nameExists = false;
     socklen_t sinelen = sizeof(sine);
     int messNum;
     vector<board>::iterator it;
@@ -143,24 +142,76 @@ string serverDelete(int udp_s, vector<board> &boardVec, string currentUser, sock
     //Checks to see if the board exists:
     for (it = boardVec.begin(); it != boardVec.end(); ++it) {
       if (boardName == it->name) { //board exists
-          nameExists = true;
-          if((it->messageVec).size() >= numMess) { //message exists
+          if((it->messageVec).size() >= (unsigned int)messNum) { //message exists
+            if((it->messageVec).at(messNum).user == currentUser){  //username matches - then delete
+              (it->messageVec).erase((it->messageVec).begin()+(messNum+1)); //Should erase it? Seems really odd...
+              message = "The message was successfully deleted.\n";
+ 	    }else{ //username does not match
+              message = "Error: Cannot delete a post that you did not post yourself.\n";
+            }
           }else{ //message does not exist 
+            message = "Error: The requested message does not exist.\n";
           }    
-      } else {
+      }else{ //board does not exist
+        message = "Error: The board does not exist.\n";
+      }
     }
-        
-
-          //Then checks to see whether it is the same user who wants to delete the message is the same user that posted it:
-    //Sends the results to the client depending on 
-
-     */
-    return "";
-
+  
+    //Sends the results of the previous for loop to the client:
+    return message;
 }
 
-string serverEdit(){
-    return "";
+string serverEdit(int udp_s, vector<board> &boardVec, string currentUser, sockaddr_in &sin, sockaddr_in &sine){
+    string message, boardName, userMessage; 
+    char buffy[1001];
+    socklen_t sinelen = sizeof(sine);
+    int messNum;
+    vector<board>::iterator it;
+
+    //Prompts user for the name of the board that they would like to access:
+    message = "Which board has the message that you would like to edit? ";
+    udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), "Could not send board name request");
+
+    //Receives the board name from the client:
+    udpRecv(udp_s, buffy, PROG4_BUFF_SIZE, &sine, &sinelen, "Did not receive board name from user");
+    boardName = buffy;
+
+    //Prompts user for the number of the message they woud like to edit:
+    message = "What is the number of the message that you would like to edit? ";
+    udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), "Could not send message number request");
+
+    //Receives the message number:
+    udpRecv(udp_s, buffy, PROG4_BUFF_SIZE, &sine, &sinelen, "Did not receive message number from the user");
+    messNum = atoi(buffy);
+
+    //Prompts user for the new version of their message:
+    message = "What is the new verison of this message? ";
+    udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), "Could not send edited message request");
+
+    //Receives new message from the client:
+    udpRecv(udp_s, buffy, PROG4_BUFF_SIZE, &sine, &sinelen, "Did not receive edited message from the user");
+    userMessage = buffy;
+
+    //Checks to see if board exists:
+    for (it = boardVec.begin(); it != boardVec.end(); ++it) {
+      if (boardName == it->name) { //board exists
+        if((it->messageVec).size() >= (unsigned int)messNum) { //message exists
+          if((it->messageVec).at(messNum).user == currentUser){  //username matches
+            (it->messageVec).at(messNum).text = userMessage; //edits the message
+            message = "Message successfully edited.\n";
+          }else{ //username does not match
+              message = "Error: Cannot delete a post that you did not post yourself.\n";
+            }
+          }else{ //message does not exist 
+            message = "Error: The requested message does not exist.\n";
+          }    
+      }else{ //board does not exist
+        message = "Error: The board does not exist.\n";
+      }
+    }
+
+    //Sends results to the client:
+    return message;
 }
 
 string serverList(int sock, vector<board> & boardVec,sockaddr_in & sin){
@@ -487,7 +538,7 @@ int main(int argc, char * argv[]){
               message = serverDelete(udp_s,boardVec, username, sin, sine);
           }
           else if(strcmp("EDT",buffy)==0){
-              //serverEdit(udp_s);
+              message = serverEdit(udp_s,boardVec, username, sin, sine);
           }
           else if(strcmp("LIS",buffy)==0){
               message = serverList(udp_s, boardVec, sin);
