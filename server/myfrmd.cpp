@@ -145,7 +145,7 @@ string serverDelete(int udp_s, vector<board> &boardVec, string currentUser, sock
       if (boardName == it->name) { //board exists
           if((it->messageVec).size() >= (unsigned int)messNum) { //message exists
             if((it->messageVec).at(messNum).user == currentUser){  //username matches - then delete
-              (it->messageVec).erase((it->messageVec).begin()+(messNum));
+              (it->messageVec).erase((it->messageVec).begin()+(messNum-1));
               message = "The message was successfully deleted.\n";
  	    }else{ //username does not match
               message = "Error: Cannot delete a post that you did not post yourself.\n";
@@ -197,8 +197,9 @@ string serverEdit(int udp_s, vector<board> &boardVec, string currentUser, sockad
     for (it = boardVec.begin(); it != boardVec.end(); ++it) {
       if (boardName == it->name) { //board exists
         if((it->messageVec).size() >= (unsigned int)messNum) { //message exists
+          cout << (it->messageVec).at(messNum).user << endl;
           if((it->messageVec).at(messNum).user == currentUser){  //username matches
-            (it->messageVec).at(messNum).text = userMessage; //edits the message
+            (it->messageVec).at(messNum-1).text = userMessage; //edits the message
             message = "Message successfully edited.\n";
           }else{ //username does not match
               message = "Error: Cannot delete a post that you did not post yourself.\n";
