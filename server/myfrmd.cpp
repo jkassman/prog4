@@ -27,7 +27,7 @@ bool doesBoardExist(string boardName, vector<board> & boardVec)
             return true;
         }
     }
-    return true;
+    return false;
 }
 
 string serverCreate(int sock, string currentUser, vector<board> & boardVec, sockaddr_in & sin){
@@ -107,9 +107,9 @@ string serverMessage(int udp_s, vector<board> &boardVec, string currentUser, soc
      message = "The message was posted successfully.";   
      
     //Else, do not post message:
-   }else{
-     message = "This board does not exist."; 
-   }
+    }else{
+      message = "This board does not exist."; 
+    }
 
     //Send results back to the client:
     //udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), "Could not send message final results");
@@ -259,8 +259,55 @@ string serverAppend(){
     return "";
 }
 
-string serverDownload(){
-    return "";
+string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_in & sin){
+  struct sockaddr_in client_addr;
+  socklen_t addr_len;
+  char boardName[1000];
+  char fileName[1000];
+  addr_len = sizeof(client_addr);
+  vector<board>::iterator it;
+  bool nameExists = false;
+  bool fileExists = false;
+
+  udpStrSend(udp_s, "Please enter the name of the board to download from:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+
+  udpRecv(udp_s,boardName,1000,&client_addr,&addr_len,"myfrmd");
+
+  udpStrSend(udp_s, "Please enter the name of the file to download:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+
+  udpRecv(udp_s,fileName,1000,&client_addr,&addr_len,"myfrmd");
+
+  //loop through boardVec to make sure board exists
+  for (it = boardVec.begin(); it != boardVec.end(); ++it){
+    if (boardName == it->name){ 
+      nameExists = true;
+      break;
+    }
+  }
+
+  //loop through the board's appended files to make sure file exists
+  for (fileIt = it->fileVec.begin(); fileIt != it->fileVec.end(); ++fileIt){
+    if (fileIt == fileName){
+      fileExists = true;
+    }
+  }
+
+  if(!nameExists){
+    //send negative filesize
+    return "Board does not exist. Cannot download file.";
+  }
+  else{
+    if(!fileExists){
+      //send negative filesize
+      return "Board exists, but the file you are asking for is not appended to the board.";
+    }
+    else{
+      //send positive filesize
+      //send file
+    }
+  }
+  
+  return "File successfully downloaded";
 }
 
 string serverDestroy(int sock, string currentUser, vector<board> & boardVec, sockaddr_in & sin){
