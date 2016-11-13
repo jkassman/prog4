@@ -19,10 +19,14 @@ struct message{
   string text;
 };
 
+struct file{
+  string name;
+};
+
 class board{
   public:
     vector<message> messageVec;
-    vector<string> fileVec;
+    vector<file> fileVec;
     string name;
     string creator;
 
