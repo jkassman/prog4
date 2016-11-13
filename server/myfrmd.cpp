@@ -303,7 +303,7 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
     }
     else{
       //send positive filesize
-      //send file
+      //send file boardname-filename
     }
   }
   
