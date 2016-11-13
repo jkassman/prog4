@@ -8,6 +8,6 @@ myfrm: myfrm.cpp common.o
 	g++ -Wall myfrm.cpp common.o -o myfrm -lmhash
 	
 common.o: ../common.cpp ../common.hpp
-	g++ -c ../common.cpp ../common.hpp -Wall -lmhash
+	g++ -c ../common.cpp -Wall -lmhash
 clean:
 	rm myfrm common.o
