@@ -425,6 +425,8 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
   fileName = buffy;
 
+  fileName = boardName + "-" + fileName;
+
   //loop through boardVec to make sure board exists
   for (it = boardVec.begin(); it != boardVec.end(); ++it){
     if (boardName == it->name){ 
@@ -449,8 +451,6 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
   //If the file doesn't exist, send negative filesize.
   int fileSize;
   int fileSizeToSend;
-
-  fileName = boardName + "-" + fileName;
   
   FILE* f = fopen(fileName.c_str(), "r");
   if (!f)
