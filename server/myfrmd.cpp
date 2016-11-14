@@ -462,7 +462,7 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
   bool nameExists = false;
   bool fileExists = false;
 
-  udpStrSend(udp_s, "Please enter the name of the board to download from:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+  udpStrSend(udp_s, "Please enter the name of the board to download from: ", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
   //receives the name of the board
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
