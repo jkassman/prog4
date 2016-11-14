@@ -329,7 +329,7 @@ struct sockaddr_in client_addr;
   bool fileExists = false;
   int fileSize;
 
-  udpStrSend(udp_s, "Please enter the name of the board to download from:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+  udpStrSend(udp_s, "Please enter the name of the board to append to: ", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
 
@@ -359,8 +359,7 @@ struct sockaddr_in client_addr;
   }
 
   if(!nameExists){
-    //send negative filesize
-    return "Board does not exist. Cannot append file.\n";
+      return "Board does not exist. Cannot append file.\n";
   }
   else{
     if(fileExists){
@@ -373,8 +372,10 @@ struct sockaddr_in client_addr;
 
       udpStrSend(udp_s, fileName.c_str(), &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
-      udpRecv(udp_s,&fileSize,4,&client_addr,&addr_len,"myfrmd");
-
+      //receive filesize
+      udpRecv(udp_s, &fileSize, 4, &client_addr, &addr_len, "myfrmd");
+      fileSize = ntohl(fileSize);
+      
       if(fileSize < 0){
         return "File does not exist";
       }
@@ -388,10 +389,9 @@ struct sockaddr_in client_addr;
 
       FILE *f = fopen(fileName.c_str(), "w");
       recvFile(ntcp_s, f, fileSize, "myfrmd");
-
+      fclose(f);
     }
   }
-  
   return "File successfully appended\n";
 }
 
@@ -688,7 +688,7 @@ int main(int argc, char * argv[]){
               message = serverRead(udp_s, ntcp_s, sin, boardVec);
           }
           else if(strcmp("APN",buffy)==0){
-              serverAppend(udp_s, ntcp_s, boardVec, sin);
+              message = serverAppend(udp_s, ntcp_s, boardVec, sin);
           }
           else if(strcmp("DWN",buffy)==0){
               message = serverDownload(udp_s, ntcp_s, boardVec, sin);
