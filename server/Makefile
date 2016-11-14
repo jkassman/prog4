@@ -1,6 +1,6 @@
 #  Authors: Jacob Kassman, Lauren Kuta, Matt Paulson
 #  netIDs: jkassman, lkuta, mpaulson
-#  Computer Networks: Programming Assignment 3
+#  Computer Networks: Programming Assignment 4
 #  Makefile 
 #  Makefile for our server code.
 
