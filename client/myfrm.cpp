@@ -211,7 +211,6 @@ int main(int argc, char **argv)
         {
            cout << buffy;
            break;
-        } 
         }
         else if (!strcmp(buffy, "APN"))
         {
