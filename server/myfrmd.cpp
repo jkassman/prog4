@@ -513,13 +513,15 @@ string serverShutdown(int ntcp_s, int udp_s, int tcp_s, vector<board> & boardVec
   //Comparsion of admin password to the user-entered password:
   if(clientPass == adminPass){
     message = "The server has been shut down.\n";
-    boardVec.clear();    // destroys all message boards
+    udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), 
+               "Could not send server death message\n");
     // Delete all files appended to the boards
     for (it = boardVec.begin(); it != boardVec.end(); ++it) {
       for (it2 = (it->fileVec).begin(); it2 != (it->fileVec).end(); ++it2) {
-        remove((it2->name).c_str());
+          remove((it2->name).c_str());
       }
     }
+    boardVec.clear();    // destroys all message boards
     close(ntcp_s);	 // closes all socket connections
     close(udp_s);
     close(tcp_s);
@@ -729,7 +731,7 @@ int main(int argc, char * argv[]){
               break; //exit inner while loop
           }
           else if(strcmp("SHT",buffy)==0){
-              message = serverShutdown(udp_s, ntcp_s, tcp_s, boardVec, sin, adminPass);
+              message = serverShutdown(ntcp_s, udp_s, tcp_s, boardVec, sin, adminPass);
           }
           else{
               message = "Invalid command entered.\n";

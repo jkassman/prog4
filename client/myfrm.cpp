@@ -101,6 +101,42 @@ void clientAppend(int tcpSock, int udpSock, struct sockaddr_in & sinbad)
     sendFile(tcpSock, f, fileSize, "myfrm: APN");
 }
 
+void clientDownload(int tcpSock, int udpSock, struct sockaddr_in & sinbad)
+{
+    //send simple ack
+    udpStrSend(udpSock, "ACK DWN", &sinbad, sizeof(struct sockaddr), 
+               "Failed to send simple download ACK");
+    
+    //receive file size
+    struct sockaddr_in serverAddr;
+    socklen_t serverAddr_len = sizeof(serverAddr);
+    int fileSize;
+    udpRecv(udpSock, &fileSize, 4, &serverAddr, &serverAddr_len,
+            "DWN: Could not receive file size");
+    fileSize = ntohl(fileSize);
+
+    if (fileSize < 0)
+    {        
+        return; //server handles error messages in this case
+    }
+
+    //receive file name
+    char filename[PROG4_BUFF_SIZE];
+    udpRecv(udpSock, filename, PROG4_BUFF_SIZE, &serverAddr, &serverAddr_len,
+            "DWN: Could not receive file name");
+
+    //actually receive the file
+    FILE* f = fopen(filename, "w");
+    if (!f)
+    {
+        cerr << "DWN: Could not open file " << filename << endl;
+        exit(1);
+    }
+    recvFile(tcpSock, f, fileSize, "myfrm: DWN");
+
+    fclose(f);
+}
+
 int main(int argc, char **argv)
 {
     //Argument handling
@@ -215,6 +251,11 @@ int main(int argc, char **argv)
         else if (!strcmp(buffy, "APN"))
         {
             clientAppend(tcpSock, udpSock, sinbad);
+            continue;
+        }
+        else if (!strcmp(buffy, "DWN"))
+        {
+            clientDownload(tcpSock, udpSock, sinbad);
             continue;
         }
 
