@@ -13,10 +13,14 @@
 
 using namespace std;
 
+//Client support for the RDB operation.
+//It receives the size of the board, then the name of the board.
+//It then receives the file, prints it out, then deletes the file.
 void clientRead(int tcpSock, int udpSock)
 {
     struct sockaddr_in serverAddr;
     socklen_t serverAddr_len = sizeof(serverAddr);
+    
     //receive the file size
     int recvFileSize;
     int fileSize;
@@ -31,10 +35,8 @@ void clientRead(int tcpSock, int udpSock)
     char boardName[PROG4_BUFF_SIZE];
     udpRecv(udpSock, &boardName, PROG4_BUFF_SIZE, &serverAddr, &serverAddr_len, 
             "RDB: Could not receive board name");
-    cout << "Received Board Name " << boardName << ". Its size is " << fileSize << endl;
-    
-    //receive the file
 
+    //receive the file
     int boardFd = open(boardName, O_CREAT | O_EXCL | O_WRONLY, 0644);
     FILE* boardF = fdopen(boardFd, "w");
     if (!boardF)
@@ -43,7 +45,6 @@ void clientRead(int tcpSock, int udpSock)
         return;
     }
     recvFile(tcpSock, boardF, fileSize, "myfrm RDB");
-    cout << "received the file" << endl;
     
     //print the file to the screen
     fclose(boardF);
@@ -53,6 +54,7 @@ void clientRead(int tcpSock, int udpSock)
         cerr << "RDB: Could not re-open file named " << boardName << endl;
         return;
     }
+    //simple unix cat function
     int bytesPrinted = 0;
     while (bytesPrinted < fileSize)
     {
@@ -64,6 +66,9 @@ void clientRead(int tcpSock, int udpSock)
     remove(boardName);
 }
 
+//client function to support the append operation.
+//sends an ack, receives the filename, then opens the file and sends its size.
+//finally sends the file over.
 void clientAppend(int tcpSock, int udpSock, struct sockaddr_in & sinbad)
 {
     //send ack
@@ -90,17 +95,18 @@ void clientAppend(int tcpSock, int udpSock, struct sockaddr_in & sinbad)
     {
         fileSize = getFileSize(f);
     }
-    cout << "fileSize: " << fileSize << endl;
     fileSizeToSend = htonl(fileSize);
     udpSend(udpSock, &fileSizeToSend, 4, &sinbad, sizeof(struct sockaddr),
-            "APN: Could not send negative filesize");
+            "APN: Could not send filesize");
     if (fileSize < 0) return;
-
 
     //actually send the file with TCP
     sendFile(tcpSock, f, fileSize, "myfrm: APN");
 }
 
+//client function to support the download (DWN) operation.
+//UPD: Sends a simple ACK, receives the file size, receives the file name
+//TCP: receives the file.
 void clientDownload(int tcpSock, int udpSock, struct sockaddr_in & sinbad)
 {
     //send simple ack
@@ -204,6 +210,7 @@ int main(int argc, char **argv)
         exit(2);
     }
     
+    //create UDP socket
     int udpSock = socket(PF_INET, SOCK_DGRAM, 0);
     if (udpSock < 0)
     {
@@ -215,7 +222,7 @@ int main(int argc, char **argv)
     udpStrSend(udpSock, "Initialize UDP Session", 
                &sinbad, sizeof(struct sockaddr), "Could not send username");
 
-    //setup complete, now we're ready to do stuff!
+    //setup complete, now we're ready to do networks stuff!
 
     //Prompt user for operation state:
     /* Main while loop: 
@@ -227,13 +234,13 @@ int main(int argc, char **argv)
     char buffy[PROG4_BUFF_SIZE];
     while (1)
     {
-        //Receive Prompt from server:
+        //Receive prompt from server:
         struct sockaddr_in sinebard;
         socklen_t sinebardlen = sizeof(sinebard);
-        cout << "Listening for server message" << endl;
+        //cout << "Listening for server message" << endl;
         udpRecv(udpSock, buffy, PROG4_BUFF_SIZE, &sinebard, &sinebardlen, 
                 "error receiving server prompt message");
-        cout << "Received Server Message" << endl;
+        //cout << "Received Server Message" << endl;
         //interpret what the server said
         if (!strcmp(buffy, "XIT"))
         {
@@ -243,9 +250,9 @@ int main(int argc, char **argv)
         {
             clientRead(tcpSock, udpSock);
             continue;
-        }else if (!strcmp(buffy, "The server has been shut down.\n"))
+        }else if (!strcmp(buffy, "SHT"))
         {
-           cout << buffy;
+            cout << "The server has been shut down." << endl;
            break;
         }
         else if (!strcmp(buffy, "APN"))

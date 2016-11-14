@@ -4,7 +4,7 @@
   netIDs: jkassman, lkuta, mpaulson
   Computer Networks: Programming Assignment 4
   myfrmd.cpp
-  ???Creates a TCP server able to receive several commands from a client.???
+  Creates a server that will allow the creation of a dynamic message forum.
  */
 
 #include <string>
@@ -65,6 +65,7 @@ string serverCreate(int sock, string currentUser, vector<board> & boardVec, sock
   }
 }
 
+ /* serverMessage: Creates a new message on the specified board. */
 string serverMessage(int udp_s, vector<board> &boardVec, string currentUser, sockaddr_in &sin, sockaddr_in &sine){
     //Needed variables:
     string message, boardName, userMessage; 
@@ -119,6 +120,7 @@ string serverMessage(int udp_s, vector<board> &boardVec, string currentUser, soc
     return message;
 }
 
+/* serverDelete: removes a message from the board given to the server by the client */
 string serverDelete(int udp_s, vector<board> &boardVec, string currentUser, sockaddr_in &sin, sockaddr_in &sine){
     string message, boardName, userMessage; 
     char buffy[1001];
@@ -175,6 +177,7 @@ string serverDelete(int udp_s, vector<board> &boardVec, string currentUser, sock
     return message;
 }
 
+/* serverEdit: Allows the user to edit a message that they personally posted. */
 string serverEdit(int udp_s, vector<board> &boardVec, string currentUser, sockaddr_in &sin, sockaddr_in &sine){
     string message, boardName, userMessage; 
     char buffy[1001];
@@ -220,7 +223,6 @@ string serverEdit(int udp_s, vector<board> &boardVec, string currentUser, sockad
     for (it = boardVec.begin(); it != boardVec.end(); ++it) {
       if (boardName == it->name) { //board exists
         if((it->messageVec).size() > (unsigned int)index) { //message exists
-          cout << (it->messageVec).at(index).user << endl;
           if((it->messageVec).at(index).user == currentUser){ //username matches
             (it->messageVec).at(index).text = userMessage; //edits the message
             message = "Message successfully edited.\n";
@@ -290,16 +292,13 @@ string serverRead(int udpSock, int tcpSock, struct sockaddr_in & sin,
     }
     if (!nameExists)
     {
-        cout << boardName << "Does not exist" << endl;
         //send a negative file size
         fileSize = -1;
         fileSizeToSend = htonl(fileSize);
         tcpSend(tcpSock, &fileSizeToSend, 4, 
                 "Could not send negative file size");
-        cout << "ERERE" << endl;
         return "";
     }
-    cout << boardName << "totally exists" << endl;
     //create a file from the board, C style
     int boardFd = open(boardName.c_str(), O_CREAT | O_EXCL | O_WRONLY, 0644);
     FILE* boardF = fdopen(boardFd, "w");
@@ -334,7 +333,6 @@ string serverRead(int udpSock, int tcpSock, struct sockaddr_in & sin,
     //send the filename
     udpStrSend(udpSock, boardName.c_str(), &sin, sizeof(struct sockaddr),
                "RDB: Could not send filename");
-    cout << "The size of the file to send is " << fileSize;
     sendFile(tcpSock, boardF, fileSize, "myfrmd: RDB");
 
     //delete the file
@@ -582,6 +580,7 @@ string serverDestroy(int sock, string currentUser, vector<board> & boardVec, soc
   }
 }
 
+ /*serverShutdown: server code to kill both the client and server when the admin password is successfully re-entered. */
 string serverShutdown(int ntcp_s, int udp_s, int tcp_s, vector<board> & boardVec, sockaddr_in & sin, string adminPass){
   struct sockaddr_in client_addr;
   socklen_t addr_len;
@@ -600,7 +599,7 @@ string serverShutdown(int ntcp_s, int udp_s, int tcp_s, vector<board> & boardVec
  
   //Comparsion of admin password to the user-entered password:
   if(clientPass == adminPass){
-    message = "The server has been shut down.\n";
+    message = "SHT";
     udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), 
                "Could not send server death message\n");
     // Delete all files appended to the boards
@@ -622,6 +621,7 @@ string serverShutdown(int ntcp_s, int udp_s, int tcp_s, vector<board> & boardVec
   return message;
 }
 
+/*main: executes the above functions upon receiving a specific code from the client, and sets up a server using TCP and UDP */
 int main(int argc, char * argv[]){
   struct sockaddr_in sin;
   string message, adminPass;
@@ -683,7 +683,7 @@ int main(int argc, char * argv[]){
     exit(1);
   }
 
-  printf("Hello, and Welcome to the Server of the 12st Century!\n");
+  //printf("Hello, and Welcome to the Server of the 12st Century!\n");
 
   //listen to the socket
   if((listen(tcp_s,0))<0){
@@ -708,13 +708,13 @@ int main(int argc, char * argv[]){
       bool exists = false;
       string password, username;
       socklen_t sinlen = sizeof(sin);
-      string operationsMessage = "Please enter one of these codes:\nCRT: Create Board, LIS: List Boards, MSG: Leave Message, DLT: Delete Message, RDB: Read Board, EDT: Edit Message, APN: Append File, DWN: Download File, DST: Destroy Board, XIT: Exit, SHT: Shutdown Server\n";
+      string operationsMessage = "Please enter one of these codes:\nCRT: Create Board, LIS: List Boards, RDB: Read Board, DST: Destroy Board\nMSG: Leave Message, DLT: Delete Message, EDT: Edit Message\n APN: Append File, DWN: Download File\n  XIT: Exit, SHT: Shutdown Server\n";
       
       //Receive acknowledgement from client to finish UDP set-up:
       udpRecv(udp_s, buffy, PROG4_BUFF_SIZE, &sin, &sinlen, 
               "Did not receive UDP initialization");
       //Debug:
-      cout << buffy << endl;
+      //cout << buffy << endl;
       
       /* At this point, the client is connected with TCP and UDP. */
       
@@ -805,7 +805,7 @@ int main(int argc, char * argv[]){
               message = serverRead(udp_s, ntcp_s, sin, boardVec);
           }
           else if(strcmp("APN",buffy)==0){
-              message = serverAppend(udp_s, ntcp_s, boardVec, sin);
+              message = serverAppend(udp_s, ntcp_s, username, boardVec, sin);
           }
           else if(strcmp("DWN",buffy)==0){
               message = serverDownload(udp_s, ntcp_s, boardVec, sin);
@@ -824,12 +824,12 @@ int main(int argc, char * argv[]){
           else{
               message = "Invalid command entered.\n";
           }
-          printf("Received:%s\n",buffy);
+          //printf("Received:%s\n",buffy);
           message += operationsMessage;
           udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), 
                      "Could not send action response message");
       }
-      printf("Client Quit!\n");
+      //printf("Client Quit!\n");
       close(ntcp_s);
   }
   close(udp_s);
