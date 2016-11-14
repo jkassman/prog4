@@ -483,7 +483,8 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
       udpSend(udp_s, &fileSizeToSend, 4, &sin, sizeof(struct sockaddr),
             "DWN: Could not send filesize");
 
-      udpStrSend(udp_s, originalFileName, &sin, "DWN: Could not send file name");
+      udpStrSend(udp_s, originalFileName.c_str(), &sin, sizeof(struct sockaddr),
+                 "DWN: Could not send file name");
       //send file boardname-filename
       sendFile(ntcp_s, f, fileSize, "myfrmd: DWN");
     }
