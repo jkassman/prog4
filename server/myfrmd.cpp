@@ -31,6 +31,7 @@ bool doesBoardExist(string boardName, vector<board> & boardVec)
     return false;
 }
 
+//creates a message board
 string serverCreate(int sock, string currentUser, vector<board> & boardVec, sockaddr_in & sin){
   struct sockaddr_in client_addr;
   socklen_t addr_len;
@@ -39,6 +40,7 @@ string serverCreate(int sock, string currentUser, vector<board> & boardVec, sock
 
   udpStrSend(sock, "Please enter a name for the new board:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
+  //receive boardName
   udpRecv(sock,boardName,1000,&client_addr,&addr_len,"myfrmd");
 
   //loop through boardVec to make sure boardName is unique
@@ -57,7 +59,7 @@ string serverCreate(int sock, string currentUser, vector<board> & boardVec, sock
   }
   else
   {
-      board b1(currentUser,boardName);
+      board b1(currentUser,boardName);  //create and store a board object with the current user as the creator
       boardVec.push_back(b1);
       return "Board successfully created\n";
   }
@@ -237,13 +239,14 @@ string serverEdit(int udp_s, vector<board> &boardVec, string currentUser, sockad
     return message;
 }
 
+//List all of the message boards on the server
 string serverList(int sock, vector<board> & boardVec,sockaddr_in & sin){
   vector<board>::iterator it;
   string listString = "";
   //loop through the boardVec to get all of the board names
   for (it = boardVec.begin(); it != boardVec.end(); ++it)
   {
-    if(!it->name.empty()){
+    if(!it->name.empty()){ //update listString to contain the names of all of the message boards
       listString = listString + it->name + "\n";
     }
   }
@@ -341,12 +344,15 @@ string serverRead(int udpSock, int tcpSock, struct sockaddr_in & sin,
     return "";
 }
 
-string serverAppend(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_in & sin){
+//appends a file to a message board
+string serverAppend(int udp_s, int ntcp_s, string currentUser, vector<board> & boardVec, sockaddr_in & sin){
 struct sockaddr_in client_addr;
   socklen_t addr_len;
   char buffy[1000];
   string boardName;
   string fileName;
+  string originalFileName;
+  string userMessage;
   addr_len = sizeof(client_addr);
   vector<board>::iterator it;
   vector<file>::iterator fileIt;
@@ -356,14 +362,19 @@ struct sockaddr_in client_addr;
 
   udpStrSend(udp_s, "Please enter the name of the board to append to: ", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
+  //receive the board name
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
 
   boardName = buffy;
 
   udpStrSend(udp_s, "Please enter the name of the file to append:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
+  //receive the file name
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
-  fileName = buffy;
+  oringalFileName = buffy;
+
+  //update file name to the correct naming convention
+  fileName = boardName + "-" + originalFileName;
 
   //loop through boardVec to make sure board exists
   for (it = boardVec.begin(); it != boardVec.end(); ++it){
@@ -390,12 +401,16 @@ struct sockaddr_in client_addr;
     if(fileExists){
       return "The file you are asking for is already appended to the board.\n";
     }
-    else{
-      udpStrSend(udp_s, "APN", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+    else{ //if file can be appended
 
+      //tell the client to start an append operation
+      udpStrSend(udp_s, "APN", &sin, sizeof(struct sockaddr),"Could not send APN");
+
+      //receive an acknowledgement from the client
       udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
 
-      udpStrSend(udp_s, fileName.c_str(), &sin, sizeof(struct sockaddr),"Could not send request for board name");
+      //send the file name 
+      udpStrSend(udp_s, oringinalFileName.c_str(), &sin, sizeof(struct sockaddr),"Could not send fileName");
 
       //receive filesize
       udpRecv(udp_s, &fileSize, 4, &client_addr, &addr_len, "myfrmd");
@@ -405,12 +420,12 @@ struct sockaddr_in client_addr;
         return "File does not exist";
       }
 
-      fileName = boardName + "-" + fileName;
-
+      //record that the file is being appended to the board
       struct file newFile; 
       newFile.name = fileName;  
       (it->fileVec).push_back(newFile);
 
+      //write the file in the server folder
       FILE *f = fopen(fileName.c_str(), "w");
       if (!f)
       {
@@ -419,11 +434,23 @@ struct sockaddr_in client_addr;
       }
       recvFile(ntcp_s, f, fileSize, "myfrmd");
       fclose(f);
+
+     userMessage = "I appended the file " + originalFileName + " to this message board";
+
+     struct message newMess; 
+     newMess.user = currentUser;
+     newMess.text = userMessage;
+     for(it = boardVec.begin(); it != boardVec.end(); ++it) {
+       if(boardName == it->name) { //add a message to the board that says a file has been appended
+         (it->messageVec).push_back(newMess);
+       }
+     }
     }
   }
   return "File successfully appended\n";
 }
 
+//downloads a file from a message board on the server to the client
 string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_in & sin){
   struct sockaddr_in client_addr;
   socklen_t addr_len;
@@ -439,14 +466,17 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
 
   udpStrSend(udp_s, "Please enter the name of the board to download from:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
+  //receives the name of the board
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
   boardName = buffy;
 
   udpStrSend(udp_s, "Please enter the name of the file to download:", &sin, sizeof(struct sockaddr),"Could not send request for file name");
 
+  //receives the name of the file
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
   originalFileName = buffy;
 
+  //updates the fileName to the correct naming convention
   fileName = boardName + "-" + originalFileName;
 
   //loop through boardVec to make sure board exists
@@ -466,10 +496,12 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
       }
     }
   }
+
+  //Tell the client to start the DWN operation and wait for an acknowledgement
   udpStrSend(udp_s, "DWN", &sin, sizeof(struct sockaddr), "Could not send DWN");
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
 
-  //calculate that file's filesize, and send it.
+  //calculate the file's filesize, and send it.
   //If the file doesn't exist, send negative filesize.
   int fileSize;
   int fileSizeToSend;
@@ -503,10 +535,10 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
       //send positive filesize
       udpSend(udp_s, &fileSizeToSend, 4, &sin, sizeof(struct sockaddr),
             "DWN: Could not send filesize");
-
+      //send the file name to the client
       udpStrSend(udp_s, originalFileName.c_str(), &sin, sizeof(struct sockaddr),
                  "DWN: Could not send file name");
-      //send file boardname-filename
+      //send the file to the client
       sendFile(ntcp_s, f, fileSize, "myfrmd: DWN");
     }
   }
@@ -514,6 +546,7 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
   return "File successfully downloaded\n";
 }
 
+//destroys a message board on the server
 string serverDestroy(int sock, string currentUser, vector<board> & boardVec, sockaddr_in & sin){
   struct sockaddr_in client_addr;
   socklen_t addr_len;
@@ -522,6 +555,7 @@ string serverDestroy(int sock, string currentUser, vector<board> & boardVec, soc
 
   udpStrSend(sock, "Please enter the name of the board to delete:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
+  //receives the board name
   udpRecv(sock,boardName,1000,&client_addr,&addr_len,"myfrmd");
 
   //loop through boardVec to find the board to destroy
