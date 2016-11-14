@@ -90,8 +90,9 @@ void clientAppend(int tcpSock, int udpSock, struct sockaddr_in & sinbad)
     {
         fileSize = getFileSize(f);
     }
+    cout << "fileSize: " << fileSize << endl;
     fileSizeToSend = htonl(fileSize);
-    udpSend(udpSock, &fileSize, 4, &sinbad, sizeof(struct sockaddr),
+    udpSend(udpSock, &fileSizeToSend, 4, &sinbad, sizeof(struct sockaddr),
             "APN: Could not send negative filesize");
     if (fileSize < 0) return;
 
