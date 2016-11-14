@@ -139,13 +139,24 @@ string serverDelete(int udp_s, vector<board> &boardVec, string currentUser, sock
     //Receives the message ID number from the user:
     udpRecv(udp_s, buffy, PROG4_BUFF_SIZE, &sine, &sinelen, "Did not receive message number from the user");
     messNum = atoi(buffy);
+    int status = stringToInt(&messNum, buffy, 0, INT_MAX);
+    if (status !=0)
+    {
+        if (status == 3)
+            return "Could not parse the number that was entered.\n";
+        if (status == 2)
+            return "The entered number was too large! (greater than INT_MAX).\n";
+        if (status == 1)
+            return "Message numbers cannot be less than or equal to zero.\n";
+    }
+    int index = messNum - 1;
 
     //Checks to see if the board exists:
     for (it = boardVec.begin(); it != boardVec.end(); ++it) {
       if (boardName == it->name) { //board exists
-          if((it->messageVec).size() >= (unsigned int)messNum) { //message exists
-            if((it->messageVec).at(messNum).user == currentUser){  //username matches - then delete
-              (it->messageVec).erase((it->messageVec).begin()+(messNum-1));
+          if((it->messageVec).size() > (unsigned int)index) { //message exists
+            if((it->messageVec).at(index).user == currentUser){  //username matches - then delete
+              (it->messageVec).erase((it->messageVec).begin()+(index));
               message = "The message was successfully deleted.\n";
  	    }else{ //username does not match
               message = "Error: Cannot delete a post that you did not post yourself.\n";
@@ -183,7 +194,17 @@ string serverEdit(int udp_s, vector<board> &boardVec, string currentUser, sockad
 
     //Receives the message number:
     udpRecv(udp_s, buffy, PROG4_BUFF_SIZE, &sine, &sinelen, "Did not receive message number from the user");
-    messNum = atoi(buffy);
+    int status = stringToInt(&messNum, buffy, 0, INT_MAX);
+    if (status !=0)
+    {
+        if (status == 3)
+            return "Could not parse the number that was entered.\n";
+        if (status == 2)
+            return "The entered number was too large! (greater than INT_MAX).\n";
+        if (status == 1)
+            return "Message numbers cannot be less than or equal to zero.\n";
+    }
+    int index = messNum - 1;
 
     //Prompts user for the new version of their message:
     message = "What is the new verison of this message? ";
@@ -196,10 +217,10 @@ string serverEdit(int udp_s, vector<board> &boardVec, string currentUser, sockad
     //Checks to see if board exists:
     for (it = boardVec.begin(); it != boardVec.end(); ++it) {
       if (boardName == it->name) { //board exists
-        if((it->messageVec).size() >= (unsigned int)messNum) { //message exists
-          cout << (it->messageVec).at(messNum).user << endl;
-          if((it->messageVec).at(messNum).user == currentUser){  //username matches
-            (it->messageVec).at(messNum-1).text = userMessage; //edits the message
+        if((it->messageVec).size() > (unsigned int)index) { //message exists
+          cout << (it->messageVec).at(index).user << endl;
+          if((it->messageVec).at(index).user == currentUser){ //username matches
+            (it->messageVec).at(index).text = userMessage; //edits the message
             message = "Message successfully edited.\n";
           }else{ //username does not match
               message = "Error: Cannot delete a post that you did not post yourself.\n";
