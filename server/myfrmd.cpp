@@ -163,7 +163,7 @@ string serverDelete(int udp_s, vector<board> &boardVec, string currentUser, sock
               (it->messageVec).erase((it->messageVec).begin()+(index));
               message = "The message was successfully deleted.\n";
  	    }else{ //username does not match
-              message = "Error: Cannot delete a post that you did not post yourself.\n";
+              message = "Error: Cannot delete a message that you did not post yourself.\n";
             }
           }else{ //message does not exist 
             message = "Error: The requested message does not exist.\n";
@@ -227,7 +227,7 @@ string serverEdit(int udp_s, vector<board> &boardVec, string currentUser, sockad
             (it->messageVec).at(index).text = userMessage; //edits the message
             message = "Message successfully edited.\n";
           }else{ //username does not match
-              message = "Error: Cannot delete a post that you did not post yourself.\n";
+              message = "Error: Cannot edit a message that you did not post yourself.\n";
             }
           }else{ //message does not exist 
             message = "Error: The requested message does not exist.\n";
@@ -462,7 +462,7 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
   bool nameExists = false;
   bool fileExists = false;
 
-  udpStrSend(udp_s, "Please enter the name of the board to download from:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+  udpStrSend(udp_s, "Please enter the name of the board to download from: ", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
   //receives the name of the board
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
@@ -558,6 +558,7 @@ string serverDestroy(int sock, string currentUser, vector<board> & boardVec, soc
 
   //loop through boardVec to find the board to destroy
   vector<board>::iterator it;
+  vector<file>::iterator it2;
   bool nameExists = false;
   for (it = boardVec.begin(); it != boardVec.end(); ++it)
   {
@@ -565,6 +566,9 @@ string serverDestroy(int sock, string currentUser, vector<board> & boardVec, soc
       { //the board exists, so destroy it if the current user is the creator
           if (currentUser == it->creator){
             nameExists = true;
+            for (it2 = (it->fileVec).begin(); it2 != (it->fileVec).end(); ++it2) {  //delete the files appended to the board on the server
+              remove((it2->name).c_str());
+            }
             boardVec.erase(it);
 	    it--;
           }
