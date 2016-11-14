@@ -289,16 +289,13 @@ string serverRead(int udpSock, int tcpSock, struct sockaddr_in & sin,
     }
     if (!nameExists)
     {
-        cout << boardName << "Does not exist" << endl;
         //send a negative file size
         fileSize = -1;
         fileSizeToSend = htonl(fileSize);
         tcpSend(tcpSock, &fileSizeToSend, 4, 
                 "Could not send negative file size");
-        cout << "ERERE" << endl;
         return "";
     }
-    cout << boardName << "totally exists" << endl;
     //create a file from the board, C style
     int boardFd = open(boardName.c_str(), O_CREAT | O_EXCL | O_WRONLY, 0644);
     FILE* boardF = fdopen(boardFd, "w");
@@ -333,7 +330,6 @@ string serverRead(int udpSock, int tcpSock, struct sockaddr_in & sin,
     //send the filename
     udpStrSend(udpSock, boardName.c_str(), &sin, sizeof(struct sockaddr),
                "RDB: Could not send filename");
-    cout << "The size of the file to send is " << fileSize;
     sendFile(tcpSock, boardF, fileSize, "myfrmd: RDB");
 
     //delete the file
@@ -569,7 +565,7 @@ string serverShutdown(int ntcp_s, int udp_s, int tcp_s, vector<board> & boardVec
  
   //Comparsion of admin password to the user-entered password:
   if(clientPass == adminPass){
-    message = "The server has been shut down.\n";
+    message = "SHT";
     udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr), 
                "Could not send server death message\n");
     // Delete all files appended to the boards
