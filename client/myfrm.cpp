@@ -64,6 +64,42 @@ void clientRead(int tcpSock, int udpSock)
     remove(boardName);
 }
 
+void clientAppend(int tcpSock, int udpSock, struct sockaddr_in & sinbad)
+{
+    //send ack
+    udpStrSend(udpSock, "ACK APN", &sinbad, sizeof(struct sockaddr),
+               "Could not send basic append acknowledge");
+
+    //receive filename
+    struct sockaddr_in serverAddr;
+    socklen_t serverAddr_len = sizeof(struct sockaddr);
+    char filename[PROG4_BUFF_SIZE];
+    udpRecv(udpSock, filename, PROG4_BUFF_SIZE, &serverAddr, &serverAddr_len,
+            "APN: Could not receive filename");
+
+    //calculate that file's filesize, and send it.
+    //If the file doesn't exist, send negative filesize.
+    int fileSize;
+    int fileSizeToSend;
+    FILE* f = fopen(filename, "r");
+    if (!f)
+    {
+        fileSize = -1;
+    }
+    else
+    {
+        fileSize = getFileSize(f);
+    }
+    fileSizeToSend = htonl(fileSize);
+    udpSend(udpSock, &fileSize, 4, &sinbad, sizeof(struct sockaddr),
+            "APN: Could not send negative filesize");
+    if (fileSize < 0) return;
+
+
+    //actually send the file with TCP
+    sendFile(tcpSock, f, fileSize, "myfrm: APN");
+}
+
 int main(int argc, char **argv)
 {
     //Argument handling
@@ -131,11 +167,6 @@ int main(int argc, char **argv)
         exit(2);
     }
     
-    //DEBUG
-    //char buffy2[PROG4_BUFF_SIZE];
-    //tcpRecv(tcpSock, buffy2, PROG4_BUFF_SIZE, "BADNESS");
-    //cout << "Jacob's Dumb Test" << buffy2 << endl;
-
     int udpSock = socket(PF_INET, SOCK_DGRAM, 0);
     if (udpSock < 0)
     {
@@ -180,6 +211,12 @@ int main(int argc, char **argv)
            cout << buffy;
            break;
         } 
+        }
+        else if (!strcmp(buffy, "APN"))
+        {
+            clientAppend(tcpSock, udpSock, sinbad);
+            continue;
+        }
 
         //print out the server's prompt
         cout << buffy;

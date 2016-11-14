@@ -316,8 +316,83 @@ string serverRead(int udpSock, int tcpSock, struct sockaddr_in & sin,
     return "";
 }
 
-string serverAppend(){
-    return "";
+string serverAppend(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_in & sin){
+struct sockaddr_in client_addr;
+  socklen_t addr_len;
+  char buffy[1000];
+  string boardName;
+  string fileName;
+  addr_len = sizeof(client_addr);
+  vector<board>::iterator it;
+  vector<file>::iterator fileIt;
+  bool nameExists = false;
+  bool fileExists = false;
+  int fileSize;
+
+  udpStrSend(udp_s, "Please enter the name of the board to download from:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+
+  udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
+
+  boardName = buffy;
+
+  udpStrSend(udp_s, "Please enter the name of the file to append:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+
+  udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
+  fileName = buffy;
+
+  //loop through boardVec to make sure board exists
+  for (it = boardVec.begin(); it != boardVec.end(); ++it){
+    if (boardName == it->name){ 
+      nameExists = true;
+      break;
+    }
+  }
+
+  //loop through the board's appended files to make sure file exists
+  if (nameExists){
+    for (fileIt = it->fileVec.begin(); fileIt != it->fileVec.end(); ++fileIt){
+      if (fileIt->name == fileName){
+        fileExists = true;
+        break;
+      }
+    }
+  }
+
+  if(!nameExists){
+    //send negative filesize
+    return "Board does not exist. Cannot append file.\n";
+  }
+  else{
+    if(fileExists){
+      return "The file you are asking for is already appended to the board.\n";
+    }
+    else{
+      udpStrSend(udp_s, "APN", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+
+      udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
+
+      udpStrSend(udp_s, fileName.c_str(), &sin, sizeof(struct sockaddr),"Could not send request for board name");
+
+      udpRecv(udp_s,&fileSize,4,&client_addr,&addr_len,"myfrmd");
+
+      if(fileSize < 0){
+        return "File does not exist";
+      }
+
+      struct file newFile; 
+      newFile.name = fileName;
+  
+      (it->fileVec).push_back(newFile);
+
+      fileName = boardName + "-" + fileName;
+
+      FILE *f = fopen(fileName.c_str(), "w");
+      recvFile(ntcp_s, f, fileSize, "myfrmd");
+
+    }
+  }
+  
+  return "File successfully appended\n";
 }
 
 string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_in & sin){
@@ -349,8 +424,6 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
     }
   }
 
-  cout << "nameExists: " << nameExists << endl;
-
   //loop through the board's appended files to make sure file exists
   if (nameExists){
     for (fileIt = it->fileVec.begin(); fileIt != it->fileVec.end(); ++fileIt){
@@ -360,8 +433,6 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
       }
     }
   }
-
-  cout << "fileExists: " << fileExists << endl;
 
   if(!nameExists){
     //send negative filesize
@@ -636,8 +707,7 @@ int main(int argc, char * argv[]){
               message = serverRead(udp_s, ntcp_s, sin, boardVec);
           }
           else if(strcmp("APN",buffy)==0){
-              //serverAppend(ntcp_s);
-              message = "Not yet implemented\n";
+              serverAppend(udp_s, ntcp_s, boardVec, sin);
           }
           else if(strcmp("DWN",buffy)==0){
               message = serverDownload(udp_s, ntcp_s, boardVec, sin);
