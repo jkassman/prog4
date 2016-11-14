@@ -365,7 +365,7 @@ struct sockaddr_in client_addr;
 
   boardName = buffy;
 
-  udpStrSend(udp_s, "Please enter the name of the file to append:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+  udpStrSend(udp_s, "Please enter the name of the file to append: ", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
   //receive the file name
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
@@ -433,7 +433,7 @@ struct sockaddr_in client_addr;
       recvFile(ntcp_s, f, fileSize, "myfrmd");
       fclose(f);
 
-     userMessage = "I appended the file " + originalFileName + " to this message board";
+     userMessage = "I appended the file " + originalFileName + " to this message board.";
 
      struct message newMess; 
      newMess.user = currentUser;
@@ -445,7 +445,7 @@ struct sockaddr_in client_addr;
      }
     }
   }
-  return "File successfully appended\n";
+  return "File successfully appended.\n";
 }
 
 //downloads a file from a message board on the server to the client
@@ -468,7 +468,7 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
   boardName = buffy;
 
-  udpStrSend(udp_s, "Please enter the name of the file to download:", &sin, sizeof(struct sockaddr),"Could not send request for file name");
+  udpStrSend(udp_s, "Please enter the name of the file to download: ", &sin, sizeof(struct sockaddr),"Could not send request for file name");
 
   //receives the name of the file
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
