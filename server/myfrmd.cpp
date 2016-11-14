@@ -369,7 +369,7 @@ struct sockaddr_in client_addr;
 
   //receive the file name
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
-  oringalFileName = buffy;
+  originalFileName = buffy;
 
   //update file name to the correct naming convention
   fileName = boardName + "-" + originalFileName;
@@ -408,7 +408,7 @@ struct sockaddr_in client_addr;
       udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
 
       //send the file name 
-      udpStrSend(udp_s, oringinalFileName.c_str(), &sin, sizeof(struct sockaddr),"Could not send fileName");
+      udpStrSend(udp_s, originalFileName.c_str(), &sin, sizeof(struct sockaddr),"Could not send fileName");
 
       //receive filesize
       udpRecv(udp_s, &fileSize, 4, &client_addr, &addr_len, "myfrmd");
