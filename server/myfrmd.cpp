@@ -163,7 +163,7 @@ string serverDelete(int udp_s, vector<board> &boardVec, string currentUser, sock
               (it->messageVec).erase((it->messageVec).begin()+(index));
               message = "The message was successfully deleted.\n";
  	    }else{ //username does not match
-              message = "Error: Cannot delete a post that you did not post yourself.\n";
+              message = "Error: Cannot delete a message that you did not post yourself.\n";
             }
           }else{ //message does not exist 
             message = "Error: The requested message does not exist.\n";
@@ -227,7 +227,7 @@ string serverEdit(int udp_s, vector<board> &boardVec, string currentUser, sockad
             (it->messageVec).at(index).text = userMessage; //edits the message
             message = "Message successfully edited.\n";
           }else{ //username does not match
-              message = "Error: Cannot delete a post that you did not post yourself.\n";
+              message = "Error: Cannot edit a message that you did not post yourself.\n";
             }
           }else{ //message does not exist 
             message = "Error: The requested message does not exist.\n";
