@@ -250,9 +250,9 @@ int main(int argc, char **argv)
         {
             clientRead(tcpSock, udpSock);
             continue;
-        }else if (!strcmp(buffy, "The server has been shut down.\n"))
+        }else if (!strcmp(buffy, "SHT"))
         {
-           cout << buffy;
+            cout << "The server has been shut down." << endl;
            break;
         }
         else if (!strcmp(buffy, "APN"))
