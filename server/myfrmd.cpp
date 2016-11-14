@@ -406,8 +406,8 @@ struct sockaddr_in client_addr;
 string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_in & sin){
   struct sockaddr_in client_addr;
   socklen_t addr_len;
-  char boardName[1000];
   char buffy[1000];
+  string boardName;
   string fileName;
   addr_len = sizeof(client_addr);
   vector<board>::iterator it;
@@ -417,9 +417,10 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
 
   udpStrSend(udp_s, "Please enter the name of the board to download from:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
-  udpRecv(udp_s,boardName,1000,&client_addr,&addr_len,"myfrmd");
+  udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
+  boardName = buffy;
 
-  udpStrSend(udp_s, "Please enter the name of the file to download:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+  udpStrSend(udp_s, "Please enter the name of the file to download:", &sin, sizeof(struct sockaddr),"Could not send request for file name");
 
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
   fileName = buffy;
@@ -441,19 +442,47 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
       }
     }
   }
+  udpStrSend(udp_s, "DWN", &sin, sizeof(struct sockaddr), "Could not send DWN");
+  udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
+
+  //calculate that file's filesize, and send it.
+  //If the file doesn't exist, send negative filesize.
+  int fileSize;
+  int fileSizeToSend;
+
+  fileName = boardName + "-" + fileName;
+  
+  FILE* f = fopen(fileName.c_str(), "r");
+  if (!f)
+  {
+      fileSize = -1;
+  }
+  else
+  {
+      fileSize = getFileSize(f);
+  }
+  
+  fileSizeToSend = htonl(fileSize);
 
   if(!nameExists){
     //send negative filesize
+    udpSend(udp_s, &fileSizeToSend, 4, &sin, sizeof(struct sockaddr),
+            "APN: Could not send negative filesize");
     return "Board does not exist. Cannot download file.\n";
   }
   else{
     if(!fileExists){
       //send negative filesize
+      udpSend(udp_s, &fileSizeToSend, 4, &sin, sizeof(struct sockaddr),
+            "APN: Could not send negative filesize");
       return "Board exists, but the file you are asking for is not appended to the board.\n";
     }
     else{
       //send positive filesize
+      udpSend(udp_s, &fileSizeToSend, 4, &sin, sizeof(struct sockaddr),
+            "APN: Could not send negative filesize");
       //send file boardname-filename
+      sendFile(ntcp_s, f, fileSize, "myfrmd: DWN");
     }
   }
   
