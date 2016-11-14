@@ -329,7 +329,7 @@ struct sockaddr_in client_addr;
   bool fileExists = false;
   int fileSize;
 
-  udpStrSend(udp_s, "Please enter the name of the board to download from:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+  udpStrSend(udp_s, "Please enter the name of the board to append to: ", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
 
@@ -359,8 +359,7 @@ struct sockaddr_in client_addr;
   }
 
   if(!nameExists){
-    //send negative filesize
-    return "Board does not exist. Cannot append file.\n";
+      return "Board does not exist. Cannot append file.\n";
   }
   else{
     if(fileExists){
@@ -373,8 +372,10 @@ struct sockaddr_in client_addr;
 
       udpStrSend(udp_s, fileName.c_str(), &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
-      udpRecv(udp_s,&fileSize,4,&client_addr,&addr_len,"myfrmd");
-
+      //receive filesize
+      udpRecv(udp_s, &fileSize, 4, &client_addr, &addr_len, "myfrmd");
+      fileSize = ntohl(fileSize);
+      
       if(fileSize < 0){
         return "File does not exist";
       }
@@ -388,10 +389,9 @@ struct sockaddr_in client_addr;
 
       FILE *f = fopen(fileName.c_str(), "w");
       recvFile(ntcp_s, f, fileSize, "myfrmd");
-
+      fclose(f);
     }
   }
-  
   return "File successfully appended\n";
 }
 
@@ -486,23 +486,42 @@ string serverDestroy(int sock, string currentUser, vector<board> & boardVec, soc
   }
 }
 
-string serverShutdown(int sock, vector<board> & boardVec, sockaddr_in & sin, string adminPass){
+string serverShutdown(int ntcp_s, int udp_s, int tcp_s, vector<board> & boardVec, sockaddr_in & sin, string adminPass){
   struct sockaddr_in client_addr;
   socklen_t addr_len;
   char clientPass[1000];
   addr_len = sizeof(client_addr);
+  string message;
+  vector<board>::iterator it;
+  vector<file>::iterator it2;
 
-  udpStrSend(sock, "Please enter the Admin Password. WARNING: The server will be shut down and all boards destroyed:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
-
-  udpRecv(sock,clientPass,1000,&client_addr,&addr_len,"myfrmd");
-
+  //Sends prompt for to the user concerning shutdown:
+  message = "Please enter the Admin Password. WARNING: The server will be shut down and all boards destroyed:";
+  udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr),"Could not send request for board name");
+  
+  //Receives the password from the client:
+  udpRecv(udp_s,clientPass,1000,&client_addr,&addr_len,"did not receive password from the client");
+ 
+  //Comparsion of admin password to the user-entered password:
   if(clientPass == adminPass){
-    boardVec.clear();
-    return "If this was implemented, you could shut down the server! For now, this just destroyed all boards\n";
+    message = "The server has been shut down.\n";
+    boardVec.clear();    // destroys all message boards
+    // Delete all files appended to the boards
+    for (it = boardVec.begin(); it != boardVec.end(); ++it) {
+      for (it2 = (it->fileVec).begin(); it2 != (it->fileVec).end(); ++it2) {
+        remove((it2->name).c_str());
+      }
+    }
+    close(ntcp_s);	 // closes all socket connections
+    close(udp_s);
+    close(tcp_s);
+    exit(1);
+   
   }
   else{
-    return "Incorrect Password, you do not have permission to shut down the server\n";
+    message = "Error: incorrect password. You do not have permission to shut down the server.\n";
   }
+  return message;
 }
 
 int main(int argc, char * argv[]){
@@ -688,7 +707,7 @@ int main(int argc, char * argv[]){
               message = serverRead(udp_s, ntcp_s, sin, boardVec);
           }
           else if(strcmp("APN",buffy)==0){
-              serverAppend(udp_s, ntcp_s, boardVec, sin);
+              message = serverAppend(udp_s, ntcp_s, boardVec, sin);
           }
           else if(strcmp("DWN",buffy)==0){
               message = serverDownload(udp_s, ntcp_s, boardVec, sin);
@@ -702,7 +721,7 @@ int main(int argc, char * argv[]){
               break; //exit inner while loop
           }
           else if(strcmp("SHT",buffy)==0){
-              message = serverShutdown(udp_s, boardVec, sin, adminPass);
+              message = serverShutdown(udp_s, ntcp_s, tcp_s, boardVec, sin, adminPass);
           }
           else{
               message = "Invalid command entered.\n";

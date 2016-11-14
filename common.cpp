@@ -309,7 +309,11 @@ void recvFile(int sock, FILE *f, unsigned int fileSize,
                     programName, strerror(errno));
             close(sock);
             exit(3);
-        } 
+        }
+        else if (fileRecvd == 0)
+        {
+            fprintf(stderr, "%s Error: aborted connection\n", programName);
+        }
         fwrite(file, 1, fileRecvd, f);  //write into file f and save
         counter = counter + fileRecvd;
     }
