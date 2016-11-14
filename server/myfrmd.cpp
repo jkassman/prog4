@@ -384,12 +384,11 @@ struct sockaddr_in client_addr;
         return "File does not exist";
       }
 
-      struct file newFile; 
-      newFile.name = fileName;
-  
-      (it->fileVec).push_back(newFile);
-
       fileName = boardName + "-" + fileName;
+
+      struct file newFile; 
+      newFile.name = fileName;  
+      (it->fileVec).push_back(newFile);
 
       FILE *f = fopen(fileName.c_str(), "w");
       if (!f)
