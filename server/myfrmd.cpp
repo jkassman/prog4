@@ -591,7 +591,7 @@ string serverShutdown(int ntcp_s, int udp_s, int tcp_s, vector<board> & boardVec
   vector<file>::iterator it2;
 
   //Sends prompt for to the user concerning shutdown:
-  message = "Please enter the Admin Password. WARNING: The server will be shut down and all boards destroyed:";
+  message = "Please enter the Admin Password. WARNING: The server will be shut down and all boards destroyed: ";
   udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr),"Could not send request for board name");
   
   //Receives the password from the client:
@@ -708,7 +708,7 @@ int main(int argc, char * argv[]){
       bool exists = false;
       string password, username;
       socklen_t sinlen = sizeof(sin);
-      string operationsMessage = "Please enter one of these codes:\nCRT: Create Board, LIS: List Boards, RDB: Read Board, DST: Destroy Board\nMSG: Leave Message, DLT: Delete Message, EDT: Edit Message\n APN: Append File, DWN: Download File\n  XIT: Exit, SHT: Shutdown Server\n";
+      string operationsMessage = "Please enter one of these codes:\nCRT: Create Board, LIS: List Boards, RDB: Read Board, DST: Destroy Board\nMSG: Leave Message, DLT: Delete Message, EDT: Edit Message\nAPN: Append File, DWN: Download File\nXIT: Exit, SHT: Shutdown Server\n";
       
       //Receive acknowledgement from client to finish UDP set-up:
       udpRecv(udp_s, buffy, PROG4_BUFF_SIZE, &sin, &sinlen, 
