@@ -38,7 +38,7 @@ string serverCreate(int sock, string currentUser, vector<board> & boardVec, sock
   char boardName[1000];
   addr_len = sizeof(client_addr);
 
-  udpStrSend(sock, "Please enter a name for the new board:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+  udpStrSend(sock, "Please enter a name for the new board: ", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
   //receive boardName
   udpRecv(sock,boardName,1000,&client_addr,&addr_len,"myfrmd");
@@ -108,11 +108,11 @@ string serverMessage(int udp_s, vector<board> &boardVec, string currentUser, soc
          (it2->messageVec).push_back(newMess);
        }
      }
-     message = "The message was posted successfully.";   
+     message = "The message was posted successfully.\n";   
      
     //Else, do not post message:
     }else{
-      message = "This board does not exist."; 
+      message = "This board does not exist.\n"; 
     }
 
     //Send results back to the client:
@@ -551,7 +551,7 @@ string serverDestroy(int sock, string currentUser, vector<board> & boardVec, soc
   char boardName[1000];
   addr_len = sizeof(client_addr);
 
-  udpStrSend(sock, "Please enter the name of the board to delete:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+  udpStrSend(sock, "Please enter the name of the board to delete: ", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
   //receives the board name
   udpRecv(sock,boardName,1000,&client_addr,&addr_len,"myfrmd");
@@ -572,7 +572,7 @@ string serverDestroy(int sock, string currentUser, vector<board> & boardVec, soc
   }
   if (nameExists)
   {
-      return "Board successfully destroyed\n";
+      return "Board successfully destroyed.\n";
   }
   else
   {
