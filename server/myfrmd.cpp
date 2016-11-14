@@ -558,6 +558,7 @@ string serverDestroy(int sock, string currentUser, vector<board> & boardVec, soc
 
   //loop through boardVec to find the board to destroy
   vector<board>::iterator it;
+  vector<file>::iterator it2;
   bool nameExists = false;
   for (it = boardVec.begin(); it != boardVec.end(); ++it)
   {
@@ -565,6 +566,9 @@ string serverDestroy(int sock, string currentUser, vector<board> & boardVec, soc
       { //the board exists, so destroy it if the current user is the creator
           if (currentUser == it->creator){
             nameExists = true;
+            for (it2 = (it->fileVec).begin(); it2 != (it->fileVec).end(); ++it2) {  //delete the files appended to the board on the server
+              remove((it2->name).c_str());
+            }
             boardVec.erase(it);
 	    it--;
           }
