@@ -38,7 +38,7 @@ string serverCreate(int sock, string currentUser, vector<board> & boardVec, sock
   char boardName[1000];
   addr_len = sizeof(client_addr);
 
-  udpStrSend(sock, "Please enter a name for the new board:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+  udpStrSend(sock, "Please enter a name for the new board: ", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
   //receive boardName
   udpRecv(sock,boardName,1000,&client_addr,&addr_len,"myfrmd");
@@ -108,11 +108,11 @@ string serverMessage(int udp_s, vector<board> &boardVec, string currentUser, soc
          (it2->messageVec).push_back(newMess);
        }
      }
-     message = "The message was posted successfully.";   
+     message = "The message was posted successfully.\n";   
      
     //Else, do not post message:
     }else{
-      message = "This board does not exist."; 
+      message = "This board does not exist.\n"; 
     }
 
     //Send results back to the client:
@@ -163,7 +163,7 @@ string serverDelete(int udp_s, vector<board> &boardVec, string currentUser, sock
               (it->messageVec).erase((it->messageVec).begin()+(index));
               message = "The message was successfully deleted.\n";
  	    }else{ //username does not match
-              message = "Error: Cannot delete a post that you did not post yourself.\n";
+              message = "Error: Cannot delete a message that you did not post yourself.\n";
             }
           }else{ //message does not exist 
             message = "Error: The requested message does not exist.\n";
@@ -227,7 +227,7 @@ string serverEdit(int udp_s, vector<board> &boardVec, string currentUser, sockad
             (it->messageVec).at(index).text = userMessage; //edits the message
             message = "Message successfully edited.\n";
           }else{ //username does not match
-              message = "Error: Cannot delete a post that you did not post yourself.\n";
+              message = "Error: Cannot edit a message that you did not post yourself.\n";
             }
           }else{ //message does not exist 
             message = "Error: The requested message does not exist.\n";
@@ -462,7 +462,7 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
   bool nameExists = false;
   bool fileExists = false;
 
-  udpStrSend(udp_s, "Please enter the name of the board to download from:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+  udpStrSend(udp_s, "Please enter the name of the board to download from: ", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
   //receives the name of the board
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
@@ -551,7 +551,7 @@ string serverDestroy(int sock, string currentUser, vector<board> & boardVec, soc
   char boardName[1000];
   addr_len = sizeof(client_addr);
 
-  udpStrSend(sock, "Please enter the name of the board to delete:", &sin, sizeof(struct sockaddr),"Could not send request for board name");
+  udpStrSend(sock, "Please enter the name of the board to delete: ", &sin, sizeof(struct sockaddr),"Could not send request for board name");
 
   //receives the board name
   udpRecv(sock,boardName,1000,&client_addr,&addr_len,"myfrmd");
@@ -576,7 +576,7 @@ string serverDestroy(int sock, string currentUser, vector<board> & boardVec, soc
   }
   if (nameExists)
   {
-      return "Board successfully destroyed\n";
+      return "Board successfully destroyed.\n";
   }
   else
   {
@@ -595,7 +595,7 @@ string serverShutdown(int ntcp_s, int udp_s, int tcp_s, vector<board> & boardVec
   vector<file>::iterator it2;
 
   //Sends prompt for to the user concerning shutdown:
-  message = "Please enter the Admin Password. WARNING: The server will be shut down and all boards destroyed:";
+  message = "Please enter the Admin Password. WARNING: The server will be shut down and all boards destroyed: ";
   udpStrSend(udp_s, message.c_str(), &sin, sizeof(struct sockaddr),"Could not send request for board name");
   
   //Receives the password from the client:
@@ -712,7 +712,7 @@ int main(int argc, char * argv[]){
       bool exists = false;
       string password, username;
       socklen_t sinlen = sizeof(sin);
-      string operationsMessage = "Please enter one of these codes:\nCRT: Create Board, LIS: List Boards, RDB: Read Board, DST: Destroy Board\nMSG: Leave Message, DLT: Delete Message, EDT: Edit Message\n APN: Append File, DWN: Download File\n  XIT: Exit, SHT: Shutdown Server\n";
+      string operationsMessage = "Please enter one of these codes:\nCRT: Create Board, LIS: List Boards, RDB: Read Board, DST: Destroy Board\nMSG: Leave Message, DLT: Delete Message, EDT: Edit Message\nAPN: Append File, DWN: Download File\nXIT: Exit, SHT: Shutdown Server\n";
       
       //Receive acknowledgement from client to finish UDP set-up:
       udpRecv(udp_s, buffy, PROG4_BUFF_SIZE, &sin, &sinlen, 
