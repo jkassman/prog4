@@ -298,6 +298,10 @@ string serverRead(int udpSock, int tcpSock, struct sockaddr_in & sin,
     //send the filesize
     fclose(boardF);
     boardF = fopen(boardName.c_str(), "r");
+    if (!boardF)
+    {
+        cerr << "RDB: Error re-opening file for reading" << endl;
+    }
     
     fileSize = getFileSize(boardF);
     fileSizeToSend = htonl(fileSize);
@@ -388,6 +392,11 @@ struct sockaddr_in client_addr;
       fileName = boardName + "-" + fileName;
 
       FILE *f = fopen(fileName.c_str(), "w");
+      if (!f)
+      {
+          cerr << "APN Error: could not open file " << fileName << endl;
+          exit(22);
+      }
       recvFile(ntcp_s, f, fileSize, "myfrmd");
       fclose(f);
     }
