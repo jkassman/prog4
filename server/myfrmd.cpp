@@ -409,6 +409,7 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
   char buffy[1000];
   string boardName;
   string fileName;
+  string originalFileName;
   addr_len = sizeof(client_addr);
   vector<board>::iterator it;
   vector<file>::iterator fileIt;
@@ -423,9 +424,9 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
   udpStrSend(udp_s, "Please enter the name of the file to download:", &sin, sizeof(struct sockaddr),"Could not send request for file name");
 
   udpRecv(udp_s,buffy,1000,&client_addr,&addr_len,"myfrmd");
-  fileName = buffy;
+  originalFileName = buffy;
 
-  fileName = boardName + "-" + fileName;
+  fileName = boardName + "-" + originalFileName;
 
   //loop through boardVec to make sure board exists
   for (it = boardVec.begin(); it != boardVec.end(); ++it){
@@ -467,20 +468,22 @@ string serverDownload(int udp_s, int ntcp_s, vector<board> & boardVec, sockaddr_
   if(!nameExists){
     //send negative filesize
     udpSend(udp_s, &fileSizeToSend, 4, &sin, sizeof(struct sockaddr),
-            "APN: Could not send negative filesize");
+            "DWN: Could not send negative filesize");
     return "Board does not exist. Cannot download file.\n";
   }
   else{
     if(!fileExists){
       //send negative filesize
       udpSend(udp_s, &fileSizeToSend, 4, &sin, sizeof(struct sockaddr),
-            "APN: Could not send negative filesize");
+            "DWN: Could not send negative filesize");
       return "Board exists, but the file you are asking for is not appended to the board.\n";
     }
     else{
       //send positive filesize
       udpSend(udp_s, &fileSizeToSend, 4, &sin, sizeof(struct sockaddr),
-            "APN: Could not send negative filesize");
+            "DWN: Could not send filesize");
+
+      udpStrSend(udp_s, originalFileName, &sin, "DWN: Could not send file name");
       //send file boardname-filename
       sendFile(ntcp_s, f, fileSize, "myfrmd: DWN");
     }
